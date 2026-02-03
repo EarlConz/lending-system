@@ -39,6 +39,34 @@ body {
   animation: page-in 0.5s ease both;
 }
 
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+}
+
+.auth-card {
+  max-width: 520px;
+  width: 100%;
+}
+
+.auth-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.auth-error {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff3f3;
+  border: 1px solid #f3c6c6;
+  color: #7a1f1f;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
 .sidebar {
   position: sticky;
   top: 0;

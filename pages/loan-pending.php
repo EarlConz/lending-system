@@ -1,8 +1,15 @@
 <?php
+  require "../bootstrap.php";
+
   $pageTitle = "Loan Application Release";
-  $pageSubtitle = "Tuesday, February 3, 2026";
+  $pageSubtitle = date("l, F j, Y");
   $topActionLabel = "Pending Applications";
   $activePage = "loan-pending";
+
+  $loanRepo = new LoanRepository();
+  $pendingStats = $loanRepo->getPendingStats();
+  $pendingApplications = $loanRepo->getPendingApplications();
+
   require "../partials/head.php";
   require "../partials/sidebar.php";
 ?>
@@ -14,19 +21,19 @@
     <p>Keep the queue flowing with clear priorities and due dates.</p>
     <div class="stats">
       <div class="stat">
-        <strong>14</strong>
+        <strong><?php echo (int) $pendingStats["pending_review"]; ?></strong>
         <span>Pending review</span>
       </div>
       <div class="stat">
-        <strong>4</strong>
+        <strong><?php echo (int) $pendingStats["needs_documents"]; ?></strong>
         <span>Needs documents</span>
       </div>
       <div class="stat">
-        <strong>3</strong>
+        <strong><?php echo (int) $pendingStats["supervisor_review"]; ?></strong>
         <span>Supervisor review</span>
       </div>
       <div class="stat">
-        <strong>2</strong>
+        <strong><?php echo (int) $pendingStats["overdue"]; ?></strong>
         <span>Overdue</span>
       </div>
     </div>
@@ -49,27 +56,25 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>AP-1182</td>
-            <td>Angela Perez</td>
-            <td>60,000</td>
-            <td>2026-02-01</td>
-            <td><span class="status-pill warn">High</span></td>
-          </tr>
-          <tr>
-            <td>AP-1188</td>
-            <td>Marco Reyes</td>
-            <td>25,000</td>
-            <td>2026-02-02</td>
-            <td><span class="status-pill">Medium</span></td>
-          </tr>
-          <tr>
-            <td>AP-1191</td>
-            <td>Jessa Dizon</td>
-            <td>40,000</td>
-            <td>2026-02-03</td>
-            <td><span class="status-pill ok">Normal</span></td>
-          </tr>
+          <?php if (empty($pendingApplications)) : ?>
+            <tr>
+              <td colspan="5" class="empty-row">No pending applications found.</td>
+            </tr>
+          <?php else : ?>
+            <?php foreach ($pendingApplications as $application) : ?>
+              <tr>
+                <td><?php echo htmlspecialchars((string) $application["application_id"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $application["borrower"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $application["requested_amount"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $application["submitted_date"]); ?></td>
+                <td>
+                  <span class="status-pill <?php echo htmlspecialchars((string) $application["priority_class"]); ?>">
+                    <?php echo htmlspecialchars((string) $application["priority_label"]); ?>
+                  </span>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </tbody>
       </table>
     </div>

@@ -3,7 +3,7 @@
     $pageTitle = "Lending System";
   }
   if (!isset($pageSubtitle)) {
-    $pageSubtitle = "Tuesday, February 3, 2026";
+    $pageSubtitle = date("l, F j, Y");
   }
   if (!isset($topActionLabel)) {
     $topActionLabel = "Overview";

@@ -1,8 +1,15 @@
 <?php
+  require "../bootstrap.php";
+
   $pageTitle = "Reports";
-  $pageSubtitle = "Tuesday, February 3, 2026";
+  $pageSubtitle = date("l, F j, Y");
   $topActionLabel = "List Of Paid Loans";
   $activePage = "report-paid-loans";
+
+  $reportRepo = new ReportRepository();
+  $paidStats = $reportRepo->getPaidLoanStats();
+  $paidLoans = $reportRepo->getPaidLoans();
+
   require "../partials/head.php";
   require "../partials/sidebar.php";
 ?>
@@ -14,19 +21,19 @@
     <p>Confirm closure dates, totals, and borrower retention.</p>
     <div class="stats">
       <div class="stat">
-        <strong>210</strong>
+        <strong><?php echo htmlspecialchars((string) $paidStats["paid_year"]); ?></strong>
         <span>Paid this year</span>
       </div>
       <div class="stat">
-        <strong>85</strong>
+        <strong><?php echo htmlspecialchars((string) $paidStats["renewed"]); ?></strong>
         <span>Renewed</span>
       </div>
       <div class="stat">
-        <strong>12</strong>
+        <strong><?php echo htmlspecialchars((string) $paidStats["disputed"]); ?></strong>
         <span>Disputed</span>
       </div>
       <div class="stat">
-        <strong>3</strong>
+        <strong><?php echo htmlspecialchars((string) $paidStats["write_offs"]); ?></strong>
         <span>Write-offs</span>
       </div>
     </div>
@@ -49,20 +56,21 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>LN-24401</td>
-            <td>Grace Lim</td>
-            <td>28,000</td>
-            <td>2026-01-28</td>
-            <td>Eligible</td>
-          </tr>
-          <tr>
-            <td>LN-24417</td>
-            <td>Joel Santos</td>
-            <td>65,000</td>
-            <td>2026-01-30</td>
-            <td>Not yet</td>
-          </tr>
+          <?php if (empty($paidLoans)) : ?>
+            <tr>
+              <td colspan="5" class="empty-row">No paid loans to display.</td>
+            </tr>
+          <?php else : ?>
+            <?php foreach ($paidLoans as $loan) : ?>
+              <tr>
+                <td><?php echo htmlspecialchars((string) $loan["loan_id"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $loan["borrower"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $loan["amount"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $loan["paid_date"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $loan["renewal"]); ?></td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </tbody>
       </table>
     </div>

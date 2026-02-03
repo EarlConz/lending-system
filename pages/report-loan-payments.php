@@ -1,8 +1,15 @@
 <?php
+  require "../bootstrap.php";
+
   $pageTitle = "Reports";
-  $pageSubtitle = "Tuesday, February 3, 2026";
+  $pageSubtitle = date("l, F j, Y");
   $topActionLabel = "Loan Payment";
   $activePage = "report-loan-payments";
+
+  $reportRepo = new ReportRepository();
+  $paymentStats = $reportRepo->getLoanPaymentStats();
+  $loanPayments = $reportRepo->getLoanPayments();
+
   require "../partials/head.php";
   require "../partials/sidebar.php";
 ?>
@@ -14,19 +21,19 @@
     <p>Track remittances, short payments, and balances.</p>
     <div class="stats">
       <div class="stat">
-        <strong>1,240</strong>
+        <strong><?php echo htmlspecialchars((string) $paymentStats["payments"]); ?></strong>
         <span>Payments</span>
       </div>
       <div class="stat">
-        <strong>98%</strong>
+        <strong><?php echo htmlspecialchars((string) $paymentStats["on_time_rate"]); ?></strong>
         <span>On-time</span>
       </div>
       <div class="stat">
-        <strong>14</strong>
+        <strong><?php echo htmlspecialchars((string) $paymentStats["delinquent"]); ?></strong>
         <span>Delinquent</span>
       </div>
       <div class="stat">
-        <strong>3</strong>
+        <strong><?php echo htmlspecialchars((string) $paymentStats["defaults"]); ?></strong>
         <span>Defaults</span>
       </div>
     </div>
@@ -53,22 +60,26 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>LN-24518</td>
-            <td>Maria Dela Cruz</td>
-            <td>2,500</td>
-            <td>2026-02-03</td>
-            <td>2,500</td>
-            <td><span class="status-pill ok">On-time</span></td>
-          </tr>
-          <tr>
-            <td>LN-24530</td>
-            <td>Lea Domingo</td>
-            <td>3,500</td>
-            <td>2026-02-01</td>
-            <td>0</td>
-            <td><span class="status-pill warn">Late</span></td>
-          </tr>
+          <?php if (empty($loanPayments)) : ?>
+            <tr>
+              <td colspan="6" class="empty-row">No payment records available.</td>
+            </tr>
+          <?php else : ?>
+            <?php foreach ($loanPayments as $payment) : ?>
+              <tr>
+                <td><?php echo htmlspecialchars((string) $payment["loan_id"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $payment["borrower"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $payment["amount"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $payment["due_date"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $payment["paid_amount"]); ?></td>
+                <td>
+                  <span class="status-pill <?php echo htmlspecialchars((string) $payment["status_class"]); ?>">
+                    <?php echo htmlspecialchars((string) $payment["status_label"]); ?>
+                  </span>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </tbody>
       </table>
     </div>

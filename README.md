@@ -37,6 +37,20 @@ This project is a web-based lending system built with PHP. It manages clients, l
 ## Project Structure
 
 - `assets/`: Contains CSS and JavaScript files for styling and interactivity.
+- `bootstrap.php`: Application bootstrap and class autoloading.
+- `database/`: MySQL connection config and PDO setup.
+- `dal/`: Data Access Layer (repositories for queries).
 - `pages/`: Core application pages including client, loan, payment, and report management.
 - `partials/`: Reusable HTML/PHP partials like header, footer, sidebar, and top bar.
 - `index.php`: The entry point of the application, redirects to the default page.
+
+## Database (MySQL)
+
+Update your connection values with environment variables or edit `database/config.php`.
+
+Environment variables:
+- `DB_HOST`
+- `DB_PORT`
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASS`

@@ -1,8 +1,15 @@
 <?php
+  require "../bootstrap.php";
+
   $pageTitle = "Loan Payment";
-  $pageSubtitle = "Tuesday, February 3, 2026";
+  $pageSubtitle = date("l, F j, Y");
   $topActionLabel = "Post Payment";
   $activePage = "payment-post";
+
+  $paymentRepo = new PaymentRepository();
+  $postStats = $paymentRepo->getPostStats();
+  $recentPayments = $paymentRepo->getRecentPayments();
+
   require "../partials/head.php";
   require "../partials/sidebar.php";
 ?>
@@ -14,19 +21,19 @@
     <p>Confirm borrower details, balance, and payment method.</p>
     <div class="stats">
       <div class="stat">
-        <strong>58</strong>
+        <strong><?php echo (int) $postStats["payments_today"]; ?></strong>
         <span>Payments today</span>
       </div>
       <div class="stat">
-        <strong>12</strong>
+        <strong><?php echo (int) $postStats["cash"]; ?></strong>
         <span>Cash</span>
       </div>
       <div class="stat">
-        <strong>31</strong>
+        <strong><?php echo (int) $postStats["bank_transfer"]; ?></strong>
         <span>Bank transfer</span>
       </div>
       <div class="stat">
-        <strong>15</strong>
+        <strong><?php echo (int) $postStats["auto_debit"]; ?></strong>
         <span>Auto-debit</span>
       </div>
     </div>
@@ -76,18 +83,18 @@
         <a href="#">View Ledger</a>
       </header>
       <ul>
-        <li>
-          <span>LN-24518 · 2,500</span>
-          <span class="status-pill ok">Posted</span>
-        </li>
-        <li>
-          <span>LN-24521 · 1,950</span>
-          <span class="status-pill">Pending</span>
-        </li>
-        <li>
-          <span>LN-24530 · 3,500</span>
-          <span class="status-pill">Pending</span>
-        </li>
+        <?php if (empty($recentPayments)) : ?>
+          <li class="empty-row">No recent payments.</li>
+        <?php else : ?>
+          <?php foreach ($recentPayments as $payment) : ?>
+            <li>
+              <span><?php echo htmlspecialchars((string) $payment["label"]); ?></span>
+              <span class="status-pill <?php echo htmlspecialchars((string) $payment["status_class"]); ?>">
+                <?php echo htmlspecialchars((string) $payment["status_label"]); ?>
+              </span>
+            </li>
+          <?php endforeach; ?>
+        <?php endif; ?>
       </ul>
     </section>
   </div>

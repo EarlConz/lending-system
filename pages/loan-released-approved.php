@@ -1,8 +1,15 @@
 <?php
+  require "../bootstrap.php";
+
   $pageTitle = "Loan Application Release";
-  $pageSubtitle = "Tuesday, February 3, 2026";
+  $pageSubtitle = date("l, F j, Y");
   $topActionLabel = "Released Approved Loans";
   $activePage = "loan-released-approved";
+
+  $loanRepo = new LoanRepository();
+  $releaseStats = $loanRepo->getReleaseStats();
+  $approvedReleases = $loanRepo->getApprovedReleases();
+
   require "../partials/head.php";
   require "../partials/sidebar.php";
 ?>
@@ -14,19 +21,19 @@
     <p>Monitor approval dates, release status, and branch allocations.</p>
     <div class="stats">
       <div class="stat">
-        <strong>12</strong>
+        <strong><?php echo (int) $releaseStats["ready_for_release"]; ?></strong>
         <span>Ready for release</span>
       </div>
       <div class="stat">
-        <strong>6</strong>
+        <strong><?php echo (int) $releaseStats["released_today"]; ?></strong>
         <span>Released today</span>
       </div>
       <div class="stat">
-        <strong>3</strong>
+        <strong><?php echo (int) $releaseStats["scheduled_releases"]; ?></strong>
         <span>Scheduled releases</span>
       </div>
       <div class="stat">
-        <strong>1</strong>
+        <strong><?php echo (int) $releaseStats["on_hold"]; ?></strong>
         <span>On hold</span>
       </div>
     </div>
@@ -53,30 +60,26 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>LN-24518</td>
-            <td>Maria Dela Cruz</td>
-            <td>50,000</td>
-            <td>12 months</td>
-            <td>2026-02-01</td>
-            <td><span class="status-pill ok">Ready</span></td>
-          </tr>
-          <tr>
-            <td>LN-24521</td>
-            <td>James Torres</td>
-            <td>30,000</td>
-            <td>6 months</td>
-            <td>2026-02-02</td>
-            <td><span class="status-pill">Scheduled</span></td>
-          </tr>
-          <tr>
-            <td>LN-24530</td>
-            <td>Lea Domingo</td>
-            <td>80,000</td>
-            <td>18 months</td>
-            <td>2026-02-02</td>
-            <td><span class="status-pill warn">Hold</span></td>
-          </tr>
+          <?php if (empty($approvedReleases)) : ?>
+            <tr>
+              <td colspan="6" class="empty-row">No approved releases yet.</td>
+            </tr>
+          <?php else : ?>
+            <?php foreach ($approvedReleases as $release) : ?>
+              <tr>
+                <td><?php echo htmlspecialchars((string) $release["loan_id"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $release["borrower"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $release["amount"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $release["term"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $release["approval_date"]); ?></td>
+                <td>
+                  <span class="status-pill <?php echo htmlspecialchars((string) $release["status_class"]); ?>">
+                    <?php echo htmlspecialchars((string) $release["status_label"]); ?>
+                  </span>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </tbody>
       </table>
     </div>

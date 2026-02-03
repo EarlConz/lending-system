@@ -1,8 +1,19 @@
 <?php
+  require "../bootstrap.php";
+
   $pageTitle = "Client Management";
-  $pageSubtitle = "Tuesday, February 3, 2026";
+  $pageSubtitle = date("l, F j, Y");
   $topActionLabel = "New Client";
   $activePage = "client-new";
+
+  $clientRepo = new ClientRepository();
+  $settingsRepo = new SettingsRepository();
+
+  $clientStats = $clientRepo->getDashboardStats();
+  $recentClients = $clientRepo->getRecentClients();
+  $beneficiaries = $clientRepo->getBeneficiariesForClient(null);
+  $loanProducts = $settingsRepo->getLoanProducts();
+
   require "../partials/head.php";
   require "../partials/sidebar.php";
 ?>
@@ -17,19 +28,19 @@
     </p>
     <div class="stats">
       <div class="stat">
-        <strong>124</strong>
+        <strong><?php echo (int) $clientStats["active"]; ?></strong>
         <span>Active borrowers</span>
       </div>
       <div class="stat">
-        <strong>16</strong>
+        <strong><?php echo (int) $clientStats["pending_verification"]; ?></strong>
         <span>Pending verification</span>
       </div>
       <div class="stat">
-        <strong>8</strong>
+        <strong><?php echo (int) $clientStats["new_applications"]; ?></strong>
         <span>New applications</span>
       </div>
       <div class="stat">
-        <strong>2</strong>
+        <strong><?php echo (int) $clientStats["high_risk"]; ?></strong>
         <span>High-risk flags</span>
       </div>
     </div>
@@ -61,7 +72,7 @@
         </div>
         <div>
           <label>Branch</label>
-          <input type="text" value="002 - Main Branch" />
+          <input type="text" />
         </div>
         <div>
           <label>Last Name</label>
@@ -243,24 +254,23 @@
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>1</td>
-              <td>Spouse</td>
-              <td>Anna</td>
-              <td>M.</td>
-              <td>Dela Cruz</td>
-              <td>1994-08-01</td>
-              <td>Female</td>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td>Child</td>
-              <td>Marco</td>
-              <td>R.</td>
-              <td>Dela Cruz</td>
-              <td>2018-11-21</td>
-              <td>Male</td>
-            </tr>
+            <?php if (empty($beneficiaries)) : ?>
+              <tr>
+                <td colspan="7" class="empty-row">No beneficiaries added yet.</td>
+              </tr>
+            <?php else : ?>
+              <?php foreach ($beneficiaries as $beneficiary) : ?>
+                <tr>
+                  <td><?php echo htmlspecialchars((string) $beneficiary["index"]); ?></td>
+                  <td><?php echo htmlspecialchars((string) $beneficiary["relation"]); ?></td>
+                  <td><?php echo htmlspecialchars((string) $beneficiary["first_name"]); ?></td>
+                  <td><?php echo htmlspecialchars((string) $beneficiary["middle_name"]); ?></td>
+                  <td><?php echo htmlspecialchars((string) $beneficiary["last_name"]); ?></td>
+                  <td><?php echo htmlspecialchars((string) $beneficiary["birthdate"]); ?></td>
+                  <td><?php echo htmlspecialchars((string) $beneficiary["gender"]); ?></td>
+                </tr>
+              <?php endforeach; ?>
+            <?php endif; ?>
           </tbody>
         </table>
       </section>
@@ -273,40 +283,22 @@
         <h3>Loan Products</h3>
         <button class="btn ghost">Manage Products</button>
       </div>
-      <div class="product-grid">
-        <div class="product">
-          <div class="badge"></div>
-          <strong>Salary Loan</strong>
-          <span>Interest Rate: 1.8%</span>
-          <span>Service Charge: 0.5%</span>
-          <span class="status">Active</span>
-          <button class="cta">Select</button>
+      <?php if (empty($loanProducts)) : ?>
+        <div class="empty-row">No loan products configured yet.</div>
+      <?php else : ?>
+        <div class="product-grid">
+          <?php foreach ($loanProducts as $product) : ?>
+            <div class="product">
+              <div class="badge"></div>
+              <strong><?php echo htmlspecialchars((string) $product["name"]); ?></strong>
+              <span>Interest Rate: <?php echo htmlspecialchars((string) $product["interest_rate"]); ?></span>
+              <span>Service Charge: <?php echo htmlspecialchars((string) $product["service_charge"]); ?></span>
+              <span class="status"><?php echo htmlspecialchars((string) $product["status"]); ?></span>
+              <button class="cta">Select</button>
+            </div>
+          <?php endforeach; ?>
         </div>
-        <div class="product">
-          <div class="badge"></div>
-          <strong>Business Loan</strong>
-          <span>Interest Rate: 2.1%</span>
-          <span>Service Charge: 0.6%</span>
-          <span class="status">Active</span>
-          <button class="cta">Select</button>
-        </div>
-        <div class="product">
-          <div class="badge"></div>
-          <strong>Emergency Loan</strong>
-          <span>Interest Rate: 1.5%</span>
-          <span>Service Charge: 0.4%</span>
-          <span class="status">Active</span>
-          <button class="cta">Select</button>
-        </div>
-        <div class="product">
-          <div class="badge"></div>
-          <strong>Education Loan</strong>
-          <span>Interest Rate: 1.2%</span>
-          <span>Service Charge: 0.3%</span>
-          <span class="status">Active</span>
-          <button class="cta">Select</button>
-        </div>
-      </div>
+      <?php endif; ?>
     </section>
 
     <section class="list-panel">
@@ -315,22 +307,16 @@
         <a href="#">View All</a>
       </header>
       <ul>
-        <li>
-          <span>Mariel Dela Cruz</span>
-          <a href="#">Edit</a>
-        </li>
-        <li>
-          <span>James Torres</span>
-          <a href="#">Edit</a>
-        </li>
-        <li>
-          <span>Lea Domingo</span>
-          <a href="#">Edit</a>
-        </li>
-        <li>
-          <span>Joan Reyes</span>
-          <a href="#">Edit</a>
-        </li>
+        <?php if (empty($recentClients)) : ?>
+          <li class="empty-row">No recent clients yet.</li>
+        <?php else : ?>
+          <?php foreach ($recentClients as $client) : ?>
+            <li>
+              <span><?php echo htmlspecialchars((string) $client["name"]); ?></span>
+              <a href="<?php echo htmlspecialchars((string) $client["edit_url"]); ?>">Edit</a>
+            </li>
+          <?php endforeach; ?>
+        <?php endif; ?>
       </ul>
     </section>
   </div>

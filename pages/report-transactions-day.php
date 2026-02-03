@@ -1,8 +1,15 @@
 <?php
+  require "../bootstrap.php";
+
   $pageTitle = "Reports";
-  $pageSubtitle = "Tuesday, February 3, 2026";
+  $pageSubtitle = date("l, F j, Y");
   $topActionLabel = "Transaction For The Day";
   $activePage = "report-transactions-day";
+
+  $reportRepo = new ReportRepository();
+  $transactionStats = $reportRepo->getTransactionStats();
+  $transactionSummary = $reportRepo->getTransactionSummary();
+
   require "../partials/head.php";
   require "../partials/sidebar.php";
 ?>
@@ -14,19 +21,19 @@
     <p>Monitor totals, posted payments, and releases for today.</p>
     <div class="stats">
       <div class="stat">
-        <strong>92</strong>
+        <strong><?php echo (int) $transactionStats["transactions"]; ?></strong>
         <span>Transactions</span>
       </div>
       <div class="stat">
-        <strong>67</strong>
+        <strong><?php echo (int) $transactionStats["payments"]; ?></strong>
         <span>Payments</span>
       </div>
       <div class="stat">
-        <strong>18</strong>
+        <strong><?php echo (int) $transactionStats["releases"]; ?></strong>
         <span>Releases</span>
       </div>
       <div class="stat">
-        <strong>7</strong>
+        <strong><?php echo (int) $transactionStats["adjustments"]; ?></strong>
         <span>Adjustments</span>
       </div>
     </div>
@@ -41,11 +48,11 @@
       <div class="form-grid">
         <div>
           <label>Date</label>
-          <input type="date" value="2026-02-03" />
+          <input type="date" value="<?php echo date("Y-m-d"); ?>" />
         </div>
         <div>
           <label>Branch</label>
-          <input type="text" value="002 - Main Branch" />
+          <input type="text" />
         </div>
         <div>
           <label>Transaction Type</label>
@@ -79,27 +86,25 @@
               <th>Count</th>
               <th>Total</th>
             </tr>
-          </thead>
-          <tbody>
+        </thead>
+        <tbody>
+          <?php if (empty($transactionSummary)) : ?>
             <tr>
-              <td>Payments</td>
-              <td>67</td>
-              <td>180,500</td>
+              <td colspan="3" class="empty-row">No transactions available for the selected day.</td>
             </tr>
-            <tr>
-              <td>Releases</td>
-              <td>18</td>
-              <td>650,000</td>
-            </tr>
-            <tr>
-              <td>Adjustments</td>
-              <td>7</td>
-              <td>12,000</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+          <?php else : ?>
+            <?php foreach ($transactionSummary as $summary) : ?>
+              <tr>
+                <td><?php echo htmlspecialchars((string) $summary["type"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $summary["count"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $summary["total"]); ?></td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+  </section>
   </div>
 </main>
 <?php require "../partials/footer.php"; ?>

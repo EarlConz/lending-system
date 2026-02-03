@@ -1,8 +1,15 @@
 <?php
+  require "../bootstrap.php";
+
   $pageTitle = "Loan Payment";
-  $pageSubtitle = "Tuesday, February 3, 2026";
+  $pageSubtitle = date("l, F j, Y");
   $topActionLabel = "Delete Posted Payment";
   $activePage = "payment-delete";
+
+  $paymentRepo = new PaymentRepository();
+  $deleteStats = $paymentRepo->getDeleteStats();
+  $postedPayments = $paymentRepo->getPostedPayments();
+
   require "../partials/head.php";
   require "../partials/sidebar.php";
 ?>
@@ -14,19 +21,19 @@
     <p>Ensure reversals are approved and documented.</p>
     <div class="stats">
       <div class="stat">
-        <strong>3</strong>
+        <strong><?php echo (int) $deleteStats["reversals_today"]; ?></strong>
         <span>Reversals today</span>
       </div>
       <div class="stat">
-        <strong>2</strong>
+        <strong><?php echo (int) $deleteStats["pending_approval"]; ?></strong>
         <span>Pending approval</span>
       </div>
       <div class="stat">
-        <strong>1</strong>
+        <strong><?php echo (int) $deleteStats["completed"]; ?></strong>
         <span>Completed</span>
       </div>
       <div class="stat">
-        <strong>0</strong>
+        <strong><?php echo (int) $deleteStats["rejected"]; ?></strong>
         <span>Rejected</span>
       </div>
     </div>
@@ -50,22 +57,26 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>PAY-8832</td>
-            <td>Maria Dela Cruz</td>
-            <td>2,500</td>
-            <td>2026-02-03</td>
-            <td>Cash</td>
-            <td><span class="status-pill warn">Pending</span></td>
-          </tr>
-          <tr>
-            <td>PAY-8835</td>
-            <td>Lea Domingo</td>
-            <td>3,500</td>
-            <td>2026-02-03</td>
-            <td>Transfer</td>
-            <td><span class="status-pill">Review</span></td>
-          </tr>
+          <?php if (empty($postedPayments)) : ?>
+            <tr>
+              <td colspan="6" class="empty-row">No posted payments found.</td>
+            </tr>
+          <?php else : ?>
+            <?php foreach ($postedPayments as $payment) : ?>
+              <tr>
+                <td><?php echo htmlspecialchars((string) $payment["payment_id"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $payment["borrower"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $payment["amount"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $payment["date"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $payment["method"]); ?></td>
+                <td>
+                  <span class="status-pill <?php echo htmlspecialchars((string) $payment["status_class"]); ?>">
+                    <?php echo htmlspecialchars((string) $payment["status_label"]); ?>
+                  </span>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </tbody>
       </table>
     </div>

@@ -1,8 +1,16 @@
 <?php
+  require "../bootstrap.php";
+
   $pageTitle = "Loan Payment";
-  $pageSubtitle = "Tuesday, February 3, 2026";
+  $pageSubtitle = date("l, F j, Y");
   $topActionLabel = "Edit Amortizations";
   $activePage = "payment-edit-amort";
+
+  $paymentRepo = new PaymentRepository();
+  $editStats = $paymentRepo->getEditAmortizationStats();
+  $loanId = isset($_GET["loan_id"]) && ctype_digit($_GET["loan_id"]) ? (int) $_GET["loan_id"] : null;
+  $schedule = $paymentRepo->getAmortizationSchedule($loanId);
+
   require "../partials/head.php";
   require "../partials/sidebar.php";
 ?>
@@ -14,19 +22,19 @@
     <p>Track balance changes, rate adjustments, and notes.</p>
     <div class="stats">
       <div class="stat">
-        <strong>19</strong>
+        <strong><?php echo (int) $editStats["accounts_reviewed"]; ?></strong>
         <span>Accounts reviewed</span>
       </div>
       <div class="stat">
-        <strong>4</strong>
+        <strong><?php echo (int) $editStats["pending_edits"]; ?></strong>
         <span>Pending edits</span>
       </div>
       <div class="stat">
-        <strong>2</strong>
+        <strong><?php echo (int) $editStats["new_schedules"]; ?></strong>
         <span>New schedules</span>
       </div>
       <div class="stat">
-        <strong>1</strong>
+        <strong><?php echo (int) $editStats["escalated"]; ?></strong>
         <span>Escalated</span>
       </div>
     </div>
@@ -50,30 +58,22 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>2026-02-15</td>
-            <td>2,000</td>
-            <td>400</td>
-            <td>0</td>
-            <td>2,400</td>
-            <td>Standard</td>
-          </tr>
-          <tr>
-            <td>2026-03-15</td>
-            <td>2,000</td>
-            <td>380</td>
-            <td>0</td>
-            <td>2,380</td>
-            <td>Adjusted rate</td>
-          </tr>
-          <tr>
-            <td>2026-04-15</td>
-            <td>2,000</td>
-            <td>360</td>
-            <td>50</td>
-            <td>2,410</td>
-            <td>Penalty applied</td>
-          </tr>
+          <?php if (empty($schedule)) : ?>
+            <tr>
+              <td colspan="6" class="empty-row">No amortization schedule available.</td>
+            </tr>
+          <?php else : ?>
+            <?php foreach ($schedule as $row) : ?>
+              <tr>
+                <td><?php echo htmlspecialchars((string) $row["due_date"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $row["principal"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $row["interest"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $row["penalty"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $row["total"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $row["note"]); ?></td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </tbody>
       </table>
     </div>

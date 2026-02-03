@@ -1,8 +1,15 @@
 <?php
+  require "../bootstrap.php";
+
   $pageTitle = "Reports";
-  $pageSubtitle = "Tuesday, February 3, 2026";
+  $pageSubtitle = date("l, F j, Y");
   $topActionLabel = "Loan Listing";
   $activePage = "report-loan-listing";
+
+  $reportRepo = new ReportRepository();
+  $listingStats = $reportRepo->getLoanListingStats();
+  $loanListing = $reportRepo->getLoanListing();
+
   require "../partials/head.php";
   require "../partials/sidebar.php";
 ?>
@@ -14,19 +21,19 @@
     <p>Snapshot of all active, closed, and delinquent loans.</p>
     <div class="stats">
       <div class="stat">
-        <strong>2,350</strong>
+        <strong><?php echo htmlspecialchars((string) $listingStats["total_loans"]); ?></strong>
         <span>Total loans</span>
       </div>
       <div class="stat">
-        <strong>2,108</strong>
+        <strong><?php echo htmlspecialchars((string) $listingStats["active"]); ?></strong>
         <span>Active</span>
       </div>
       <div class="stat">
-        <strong>190</strong>
+        <strong><?php echo htmlspecialchars((string) $listingStats["closed"]); ?></strong>
         <span>Closed</span>
       </div>
       <div class="stat">
-        <strong>52</strong>
+        <strong><?php echo htmlspecialchars((string) $listingStats["delinquent"]); ?></strong>
         <span>Delinquent</span>
       </div>
     </div>
@@ -49,27 +56,25 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>LN-24518</td>
-            <td>Maria Dela Cruz</td>
-            <td>50,000</td>
-            <td>32,500</td>
-            <td><span class="status-pill ok">Active</span></td>
-          </tr>
-          <tr>
-            <td>LN-24530</td>
-            <td>Lea Domingo</td>
-            <td>80,000</td>
-            <td>0</td>
-            <td><span class="status-pill">Closed</span></td>
-          </tr>
-          <tr>
-            <td>LN-24544</td>
-            <td>Mark Tuazon</td>
-            <td>45,000</td>
-            <td>5,200</td>
-            <td><span class="status-pill warn">Delinquent</span></td>
-          </tr>
+          <?php if (empty($loanListing)) : ?>
+            <tr>
+              <td colspan="5" class="empty-row">No loans to display.</td>
+            </tr>
+          <?php else : ?>
+            <?php foreach ($loanListing as $loan) : ?>
+              <tr>
+                <td><?php echo htmlspecialchars((string) $loan["loan_id"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $loan["borrower"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $loan["amount"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $loan["balance"]); ?></td>
+                <td>
+                  <span class="status-pill <?php echo htmlspecialchars((string) $loan["status_class"]); ?>">
+                    <?php echo htmlspecialchars((string) $loan["status_label"]); ?>
+                  </span>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </tbody>
       </table>
     </div>

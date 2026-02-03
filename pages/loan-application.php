@@ -1,8 +1,16 @@
 <?php
+  require "../bootstrap.php";
+
   $pageTitle = "Loan Application Release";
-  $pageSubtitle = "Tuesday, February 3, 2026";
+  $pageSubtitle = date("l, F j, Y");
   $topActionLabel = "Application";
   $activePage = "loan-application";
+
+  $loanRepo = new LoanRepository();
+  $settingsRepo = new SettingsRepository();
+  $applicationStats = $loanRepo->getApplicationStats();
+  $recommendedProducts = $settingsRepo->getRecommendedProducts();
+
   require "../partials/head.php";
   require "../partials/sidebar.php";
 ?>
@@ -14,19 +22,19 @@
     <p>Verify identity, evaluate income sources, and recommend products.</p>
     <div class="stats">
       <div class="stat">
-        <strong>21</strong>
+        <strong><?php echo (int) $applicationStats["applications_today"]; ?></strong>
         <span>Applications today</span>
       </div>
       <div class="stat">
-        <strong>7</strong>
+        <strong><?php echo (int) $applicationStats["waiting_approval"]; ?></strong>
         <span>Waiting approval</span>
       </div>
       <div class="stat">
-        <strong>5</strong>
+        <strong><?php echo (int) $applicationStats["auto_approved"]; ?></strong>
         <span>Auto-approved</span>
       </div>
       <div class="stat">
-        <strong>2</strong>
+        <strong><?php echo (int) $applicationStats["high_risk"]; ?></strong>
         <span>High risk</span>
       </div>
     </div>
@@ -89,24 +97,22 @@
         <h3>Recommended Products</h3>
         <button class="btn ghost">Compare</button>
       </div>
-      <div class="product-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
-        <div class="product">
-          <div class="badge"></div>
-          <strong>Salary Loan</strong>
-          <span>Interest Rate: 1.8%</span>
-          <span>Service Charge: 0.5%</span>
-          <span class="status">Active</span>
-          <button class="cta">Select</button>
+      <?php if (empty($recommendedProducts)) : ?>
+        <div class="empty-row">No recommended products yet.</div>
+      <?php else : ?>
+        <div class="product-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+          <?php foreach ($recommendedProducts as $product) : ?>
+            <div class="product">
+              <div class="badge"></div>
+              <strong><?php echo htmlspecialchars((string) $product["name"]); ?></strong>
+              <span>Interest Rate: <?php echo htmlspecialchars((string) $product["interest_rate"]); ?></span>
+              <span>Service Charge: <?php echo htmlspecialchars((string) $product["service_charge"]); ?></span>
+              <span class="status"><?php echo htmlspecialchars((string) $product["status"]); ?></span>
+              <button class="cta">Select</button>
+            </div>
+          <?php endforeach; ?>
         </div>
-        <div class="product">
-          <div class="badge"></div>
-          <strong>Emergency Loan</strong>
-          <span>Interest Rate: 1.5%</span>
-          <span>Service Charge: 0.4%</span>
-          <span class="status">Active</span>
-          <button class="cta">Select</button>
-        </div>
-      </div>
+      <?php endif; ?>
     </section>
   </div>
 </main>

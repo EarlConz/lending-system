@@ -1,8 +1,17 @@
 <?php
+  require "../bootstrap.php";
+
   $pageTitle = "Client Management";
-  $pageSubtitle = "Tuesday, February 3, 2026";
+  $pageSubtitle = date("l, F j, Y");
   $topActionLabel = "Edit Client";
   $activePage = "client-edit";
+
+  $clientRepo = new ClientRepository();
+  $editStats = $clientRepo->getEditStats();
+  $queueClients = $clientRepo->getClientsNeedingUpdates();
+  $clientId = isset($_GET["id"]) && ctype_digit($_GET["id"]) ? (int) $_GET["id"] : null;
+  $client = $clientRepo->getClientById($clientId);
+
   require "../partials/head.php";
   require "../partials/sidebar.php";
 ?>
@@ -14,19 +23,19 @@
     <p>Track edits, verify documents, and keep contact details current.</p>
     <div class="stats">
       <div class="stat">
-        <strong>38</strong>
+        <strong><?php echo (int) $editStats["edits_today"]; ?></strong>
         <span>Edits today</span>
       </div>
       <div class="stat">
-        <strong>9</strong>
+        <strong><?php echo (int) $editStats["pending_review"]; ?></strong>
         <span>Pending review</span>
       </div>
       <div class="stat">
-        <strong>4</strong>
+        <strong><?php echo (int) $editStats["id_updates"]; ?></strong>
         <span>ID updates</span>
       </div>
       <div class="stat">
-        <strong>1</strong>
+        <strong><?php echo (int) $editStats["risk_escalations"]; ?></strong>
         <span>Risk escalations</span>
       </div>
     </div>
@@ -45,19 +54,19 @@
       <div class="form-grid">
         <div>
           <label>Client Name</label>
-          <input type="text" value="Maria Dela Cruz" />
+          <input type="text" value="<?php echo htmlspecialchars((string) $client["name"]); ?>" />
         </div>
         <div>
           <label>Borrower ID</label>
-          <input type="text" value="BR-000245" />
+          <input type="text" value="<?php echo htmlspecialchars((string) $client["borrower_id"]); ?>" />
         </div>
         <div>
           <label>Primary Phone</label>
-          <input type="text" value="+63 917 555 2445" />
+          <input type="text" value="<?php echo htmlspecialchars((string) $client["phone"]); ?>" />
         </div>
         <div>
           <label>Email Address</label>
-          <input type="email" value="maria@email.com" />
+          <input type="email" value="<?php echo htmlspecialchars((string) $client["email"]); ?>" />
         </div>
         <div>
           <label>Risk Category</label>
@@ -78,11 +87,11 @@
         </div>
         <div>
           <label>Present Address</label>
-          <input type="text" value="109 Rizal St., Cebu" />
+          <input type="text" value="<?php echo htmlspecialchars((string) $client["address"]); ?>" />
         </div>
         <div>
           <label>Emergency Contact</label>
-          <input type="text" value="Anna Dela Cruz" />
+          <input type="text" value="<?php echo htmlspecialchars((string) $client["emergency_contact"]); ?>" />
         </div>
       </div>
 
@@ -91,11 +100,11 @@
       <div class="form-grid">
         <div>
           <label>Last Review Date</label>
-          <input type="date" value="2026-01-30" />
+          <input type="date" value="<?php echo htmlspecialchars((string) $client["last_review_date"]); ?>" />
         </div>
         <div>
           <label>Assigned Officer</label>
-          <input type="text" value="J. Ramirez" />
+          <input type="text" value="<?php echo htmlspecialchars((string) $client["assigned_officer"]); ?>" />
         </div>
       </div>
     </section>
@@ -106,22 +115,18 @@
         <a href="#">View Queue</a>
       </header>
       <ul>
-        <li>
-          <span>Joel Santos</span>
-          <span class="status-pill warn">Missing IDs</span>
-        </li>
-        <li>
-          <span>Grace Lim</span>
-          <span class="status-pill">Email Update</span>
-        </li>
-        <li>
-          <span>Marvin Cruz</span>
-          <span class="status-pill">Address Review</span>
-        </li>
-        <li>
-          <span>Celia Bautista</span>
-          <span class="status-pill ok">Ready</span>
-        </li>
+        <?php if (empty($queueClients)) : ?>
+          <li class="empty-row">No clients in the update queue.</li>
+        <?php else : ?>
+          <?php foreach ($queueClients as $queueClient) : ?>
+            <li>
+              <span><?php echo htmlspecialchars((string) $queueClient["name"]); ?></span>
+              <span class="status-pill <?php echo htmlspecialchars((string) $queueClient["status_class"]); ?>">
+                <?php echo htmlspecialchars((string) $queueClient["status_label"]); ?>
+              </span>
+            </li>
+          <?php endforeach; ?>
+        <?php endif; ?>
       </ul>
     </section>
   </div>

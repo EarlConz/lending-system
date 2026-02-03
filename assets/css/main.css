@@ -490,6 +490,11 @@ select {
   font-size: 12px;
 }
 
+.list-panel li.empty-row {
+  display: block;
+  text-align: center;
+}
+
 .list-panel a {
   color: var(--info);
   font-weight: 700;
@@ -532,6 +537,12 @@ select {
 .status-pill.ok {
   background: #dff7e9;
   color: #126b3f;
+}
+
+.empty-row {
+  text-align: center;
+  color: var(--muted);
+  padding: 16px;
 }
 
 @keyframes float-in {

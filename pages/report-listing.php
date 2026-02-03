@@ -1,8 +1,15 @@
 <?php
+  require "../bootstrap.php";
+
   $pageTitle = "Reports";
-  $pageSubtitle = "Tuesday, February 3, 2026";
+  $pageSubtitle = date("l, F j, Y");
   $topActionLabel = "Listing";
   $activePage = "report-listing";
+
+  $reportRepo = new ReportRepository();
+  $listingStats = $reportRepo->getListingStats();
+  $savedListings = $reportRepo->getSavedListings();
+
   require "../partials/head.php";
   require "../partials/sidebar.php";
 ?>
@@ -14,19 +21,19 @@
     <p>Save filters, export formats, and report templates.</p>
     <div class="stats">
       <div class="stat">
-        <strong>6</strong>
+        <strong><?php echo (int) $listingStats["saved_templates"]; ?></strong>
         <span>Saved templates</span>
       </div>
       <div class="stat">
-        <strong>18</strong>
+        <strong><?php echo (int) $listingStats["exports_week"]; ?></strong>
         <span>Exports this week</span>
       </div>
       <div class="stat">
-        <strong>4</strong>
+        <strong><?php echo (int) $listingStats["shared"]; ?></strong>
         <span>Shared</span>
       </div>
       <div class="stat">
-        <strong>2</strong>
+        <strong><?php echo (int) $listingStats["drafts"]; ?></strong>
         <span>Drafts</span>
       </div>
     </div>
@@ -72,18 +79,18 @@
         <a href="#">Manage</a>
       </header>
       <ul>
-        <li>
-          <span>Monthly Exposure</span>
-          <span class="status-pill">Shared</span>
-        </li>
-        <li>
-          <span>Delinquency Snapshot</span>
-          <span class="status-pill">Private</span>
-        </li>
-        <li>
-          <span>Branch Performance</span>
-          <span class="status-pill ok">Scheduled</span>
-        </li>
+        <?php if (empty($savedListings)) : ?>
+          <li class="empty-row">No saved listings yet.</li>
+        <?php else : ?>
+          <?php foreach ($savedListings as $listing) : ?>
+            <li>
+              <span><?php echo htmlspecialchars((string) $listing["name"]); ?></span>
+              <span class="status-pill <?php echo htmlspecialchars((string) $listing["status_class"]); ?>">
+                <?php echo htmlspecialchars((string) $listing["status_label"]); ?>
+              </span>
+            </li>
+          <?php endforeach; ?>
+        <?php endif; ?>
       </ul>
     </section>
   </div>

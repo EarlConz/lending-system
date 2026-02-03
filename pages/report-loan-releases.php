@@ -1,8 +1,15 @@
 <?php
+  require "../bootstrap.php";
+
   $pageTitle = "Reports";
-  $pageSubtitle = "Tuesday, February 3, 2026";
+  $pageSubtitle = date("l, F j, Y");
   $topActionLabel = "Loan Releases";
   $activePage = "report-loan-releases";
+
+  $reportRepo = new ReportRepository();
+  $releaseStats = $reportRepo->getLoanReleaseStats();
+  $loanReleases = $reportRepo->getLoanReleases();
+
   require "../partials/head.php";
   require "../partials/sidebar.php";
 ?>
@@ -14,19 +21,19 @@
     <p>Measure disbursement velocity and release totals.</p>
     <div class="stats">
       <div class="stat">
-        <strong>98</strong>
+        <strong><?php echo htmlspecialchars((string) $releaseStats["releases"]); ?></strong>
         <span>Releases</span>
       </div>
       <div class="stat">
-        <strong>3.2M</strong>
+        <strong><?php echo htmlspecialchars((string) $releaseStats["total_value"]); ?></strong>
         <span>Total value</span>
       </div>
       <div class="stat">
-        <strong>12</strong>
+        <strong><?php echo htmlspecialchars((string) $releaseStats["branches"]); ?></strong>
         <span>Branches</span>
       </div>
       <div class="stat">
-        <strong>4</strong>
+        <strong><?php echo htmlspecialchars((string) $releaseStats["products"]); ?></strong>
         <span>Products</span>
       </div>
     </div>
@@ -49,20 +56,21 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>REL-3301</td>
-            <td>Jenna Uy</td>
-            <td>42,000</td>
-            <td>Salary Loan</td>
-            <td>2026-02-02</td>
-          </tr>
-          <tr>
-            <td>REL-3304</td>
-            <td>Chris Tan</td>
-            <td>35,000</td>
-            <td>Emergency Loan</td>
-            <td>2026-02-01</td>
-          </tr>
+          <?php if (empty($loanReleases)) : ?>
+            <tr>
+              <td colspan="5" class="empty-row">No loan releases available.</td>
+            </tr>
+          <?php else : ?>
+            <?php foreach ($loanReleases as $release) : ?>
+              <tr>
+                <td><?php echo htmlspecialchars((string) $release["release_id"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $release["borrower"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $release["amount"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $release["product"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $release["release_date"]); ?></td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </tbody>
       </table>
     </div>

@@ -1,8 +1,15 @@
 <?php
+  require "../bootstrap.php";
+
   $pageTitle = "Settings";
-  $pageSubtitle = "Tuesday, February 3, 2026";
+  $pageSubtitle = date("l, F j, Y");
   $topActionLabel = "Loan Product Settings";
   $activePage = "settings-loan-products";
+
+  $settingsRepo = new SettingsRepository();
+  $productStats = $settingsRepo->getProductStats();
+  $loanProducts = $settingsRepo->getLoanProducts();
+
   require "../partials/head.php";
   require "../partials/sidebar.php";
 ?>
@@ -14,19 +21,19 @@
     <p>Keep your lending portfolio competitive with structured updates.</p>
     <div class="stats">
       <div class="stat">
-        <strong>4</strong>
+        <strong><?php echo (int) $productStats["active"]; ?></strong>
         <span>Active products</span>
       </div>
       <div class="stat">
-        <strong>2</strong>
+        <strong><?php echo (int) $productStats["pending_updates"]; ?></strong>
         <span>Pending updates</span>
       </div>
       <div class="stat">
-        <strong>1</strong>
+        <strong><?php echo (int) $productStats["draft"]; ?></strong>
         <span>Draft</span>
       </div>
       <div class="stat">
-        <strong>0</strong>
+        <strong><?php echo (int) $productStats["archived"]; ?></strong>
         <span>Archived</span>
       </div>
     </div>
@@ -37,40 +44,22 @@
       <h3>Loan Products</h3>
       <button class="btn">Add Product</button>
     </div>
-    <div class="product-grid">
-      <div class="product">
-        <div class="badge"></div>
-        <strong>Salary Loan</strong>
-        <span>Interest Rate: 1.8%</span>
-        <span>Service Charge: 0.5%</span>
-        <span class="status">Active</span>
-        <button class="cta">Edit</button>
+    <?php if (empty($loanProducts)) : ?>
+      <div class="empty-row">No loan products available.</div>
+    <?php else : ?>
+      <div class="product-grid">
+        <?php foreach ($loanProducts as $product) : ?>
+          <div class="product">
+            <div class="badge"></div>
+            <strong><?php echo htmlspecialchars((string) $product["name"]); ?></strong>
+            <span>Interest Rate: <?php echo htmlspecialchars((string) $product["interest_rate"]); ?></span>
+            <span>Service Charge: <?php echo htmlspecialchars((string) $product["service_charge"]); ?></span>
+            <span class="status"><?php echo htmlspecialchars((string) $product["status"]); ?></span>
+            <button class="cta">Edit</button>
+          </div>
+        <?php endforeach; ?>
       </div>
-      <div class="product">
-        <div class="badge"></div>
-        <strong>Business Loan</strong>
-        <span>Interest Rate: 2.1%</span>
-        <span>Service Charge: 0.6%</span>
-        <span class="status">Active</span>
-        <button class="cta">Edit</button>
-      </div>
-      <div class="product">
-        <div class="badge"></div>
-        <strong>Emergency Loan</strong>
-        <span>Interest Rate: 1.5%</span>
-        <span>Service Charge: 0.4%</span>
-        <span class="status">Active</span>
-        <button class="cta">Edit</button>
-      </div>
-      <div class="product">
-        <div class="badge"></div>
-        <strong>Education Loan</strong>
-        <span>Interest Rate: 1.2%</span>
-        <span>Service Charge: 0.3%</span>
-        <span class="status">Active</span>
-        <button class="cta">Edit</button>
-      </div>
-    </div>
+    <?php endif; ?>
   </section>
 </main>
 <?php require "../partials/footer.php"; ?>

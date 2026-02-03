@@ -1,8 +1,15 @@
 <?php
+  require "../bootstrap.php";
+
   $pageTitle = "Loan Application Release";
-  $pageSubtitle = "Tuesday, February 3, 2026";
+  $pageSubtitle = date("l, F j, Y");
   $topActionLabel = "Delete Loan Releases";
   $activePage = "loan-delete-releases";
+
+  $loanRepo = new LoanRepository();
+  $deleteStats = $loanRepo->getReleaseDeletionStats();
+  $releaseDeletions = $loanRepo->getReleaseDeletions();
+
   require "../partials/head.php";
   require "../partials/sidebar.php";
 ?>
@@ -14,19 +21,19 @@
     <p>Remove incorrect releases with full audit context.</p>
     <div class="stats">
       <div class="stat">
-        <strong>5</strong>
+        <strong><?php echo (int) $deleteStats["deletes_pending"]; ?></strong>
         <span>Deletes pending</span>
       </div>
       <div class="stat">
-        <strong>2</strong>
+        <strong><?php echo (int) $deleteStats["supervisor_approvals"]; ?></strong>
         <span>Supervisor approvals</span>
       </div>
       <div class="stat">
-        <strong>1</strong>
+        <strong><?php echo (int) $deleteStats["flagged_issues"]; ?></strong>
         <span>Flagged issues</span>
       </div>
       <div class="stat">
-        <strong>0</strong>
+        <strong><?php echo (int) $deleteStats["blocked"]; ?></strong>
         <span>Blocked</span>
       </div>
     </div>
@@ -50,22 +57,26 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>REL-3301</td>
-            <td>Jenna Uy</td>
-            <td>42,000</td>
-            <td>2026-01-29</td>
-            <td>Duplicate</td>
-            <td><span class="status-pill warn">Pending</span></td>
-          </tr>
-          <tr>
-            <td>REL-3308</td>
-            <td>Chris Tan</td>
-            <td>35,000</td>
-            <td>2026-01-30</td>
-            <td>Wrong branch</td>
-            <td><span class="status-pill">Review</span></td>
-          </tr>
+          <?php if (empty($releaseDeletions)) : ?>
+            <tr>
+              <td colspan="6" class="empty-row">No release deletions queued.</td>
+            </tr>
+          <?php else : ?>
+            <?php foreach ($releaseDeletions as $release) : ?>
+              <tr>
+                <td><?php echo htmlspecialchars((string) $release["release_id"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $release["borrower"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $release["amount"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $release["released_date"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $release["reason"]); ?></td>
+                <td>
+                  <span class="status-pill <?php echo htmlspecialchars((string) $release["status_class"]); ?>">
+                    <?php echo htmlspecialchars((string) $release["status_label"]); ?>
+                  </span>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </tbody>
       </table>
     </div>

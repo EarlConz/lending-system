@@ -73,10 +73,20 @@ if (!isset($activePage)) {
         <a class="<?php echo $activePage === "settings-loan-products" ? "active" : ""; ?>" href="../pages/settings-loan-products.php">Loan Product Settings</a>
       </div>
     </details>
+
+    <details <?php echo $activePage === "admin" ? "open" : ""; ?>>
+      <summary>
+        Administrator
+        <span class="chev">v</span>
+      </summary>
+      <div class="subnav">
+        <a class="<?php echo $activePage === "admin" ? "active" : ""; ?>" href="../pages/admin.php">Administrator</a>
+      </div>
+    </details>
   </nav>
 
   <div class="sidebar-footer">
     Branch: 002 - Main Branch
   </div>
-  <a class="logout" href="#">Logout</a>
+  <a class="logout" href="../pages/logout.php">Logout</a>
 </aside>

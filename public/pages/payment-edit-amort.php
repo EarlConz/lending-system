@@ -1,5 +1,5 @@
 <?php
-  require "../bootstrap.php";
+  require dirname(__DIR__, 2) . "/bootstrap.php";
 
   $pageTitle = "Loan Payment";
   $pageSubtitle = date("l, F j, Y");

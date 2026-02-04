@@ -67,6 +67,21 @@ body {
   margin-bottom: 12px;
 }
 
+.form-error {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff3f3;
+  border: 1px solid #f3c6c6;
+  color: #7a1f1f;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.form-error ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
 .sidebar {
   position: sticky;
   top: 0;
@@ -411,6 +426,52 @@ select {
   font-size: 13px;
 }
 
+.radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+
+.radio-option input {
+  width: auto;
+  margin: 0;
+}
+
+.source-panel {
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px dashed var(--stroke);
+  display: grid;
+  gap: 8px;
+}
+
+.source-panel-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+}
+
 .divider {
   height: 1px;
   background: var(--stroke);
@@ -429,6 +490,39 @@ select {
   font-size: 11px;
   background: #ffffff;
   border: 1px solid var(--stroke);
+}
+
+.btn.small {
+  padding: 6px 10px;
+  font-size: 11px;
+  border-radius: 10px;
+}
+
+.btn.danger {
+  background: #fce8e8;
+  border: 1px solid #f2b5b5;
+  color: #8a2b2b;
+}
+
+.beneficiary-entry input,
+.beneficiary-entry select {
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.beneficiary-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.beneficiary-cell form {
+  margin: 0;
+}
+
+.input-error {
+  border-color: #e07b7b;
+  background: #fff5f5;
 }
 
 .beneficiaries table {

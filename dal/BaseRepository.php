@@ -30,4 +30,20 @@ abstract class BaseRepository
     $stmt = $this->db()->prepare($sql);
     return $stmt->execute($params);
   }
+
+  public function withTransaction(callable $callback)
+  {
+    $db = $this->db();
+    try {
+      $db->beginTransaction();
+      $result = $callback();
+      $db->commit();
+      return $result;
+    } catch (Throwable $exception) {
+      if ($db->inTransaction()) {
+        $db->rollBack();
+      }
+      throw $exception;
+    }
+  }
 }

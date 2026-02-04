@@ -553,7 +553,7 @@
               </label>
             </div>
           </div>
-          <div class="source-panel" data-source-panel data-source="employment" style="grid-column: 1 / -1;" hidden>
+          <div class="source-panel" data-source-panel data-source="employment" style="grid-column: 1 / -1;">
             <div class="source-panel-title">Employment Details</div>
             <div class="form-grid">
               <div>
@@ -597,7 +597,7 @@
               </div>
             </div>
           </div>
-          <div class="source-panel" data-source-panel data-source="business" style="grid-column: 1 / -1;" hidden>
+          <div class="source-panel" data-source-panel data-source="business" style="grid-column: 1 / -1;">
             <div class="source-panel-title">Business Details</div>
             <div class="form-grid">
               <div>
@@ -626,7 +626,7 @@
               </div>
             </div>
           </div>
-          <div class="source-panel" data-source-panel data-source="others" style="grid-column: 1 / -1;" hidden>
+          <div class="source-panel" data-source-panel data-source="others" style="grid-column: 1 / -1;">
             <div class="source-panel-title">Other Income Details</div>
             <div class="form-grid">
               <div>

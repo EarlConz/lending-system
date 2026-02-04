@@ -1,29 +1,24 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const sourceRadios = document.querySelectorAll('input[name="source_of_fund"]');
+  const sourceRadios = document.querySelectorAll(
+    'input[name="source_of_fund"]',
+  );
   const panels = document.querySelectorAll("[data-source-panel]");
 
   const togglePanels = () => {
-    if (!panels.length) {
-      return;
-    }
+  const checkedRadio = document.querySelector(
+    'input[name="source_of_fund"]:checked'
+  );
 
-    let selectedValue = "none";
-    for (let i = 0; i < sourceRadios.length; i += 1) {
-      if (sourceRadios[i].checked) {
-        selectedValue = sourceRadios[i].value;
-        break;
-      }
-    }
+  const selectedValue = checkedRadio ? checkedRadio.value : "none";
 
-    panels.forEach((panel) => {
-      const panelSource = panel.dataset.source || "";
-      if (!selectedValue || selectedValue === "none") {
-        panel.hidden = true;
-      } else {
-        panel.hidden = panelSource !== selectedValue;
-      }
-    });
-  };
+  panels.forEach(panel => {
+    const shouldShow =
+      selectedValue !== "none" &&
+      panel.dataset.source === selectedValue;
+
+    panel.classList.toggle("is-active", shouldShow);
+  });
+};
 
   sourceRadios.forEach((radio) => {
     radio.addEventListener("change", togglePanels);
@@ -47,7 +42,9 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  let beneficiaryIndex = tbody.querySelectorAll("[data-beneficiary-row]").length;
+  let beneficiaryIndex = tbody.querySelectorAll(
+    "[data-beneficiary-row]",
+  ).length;
 
   const clearErrors = () => {
     entryRow
@@ -146,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     Object.entries(values).forEach(([key, value]) => {
       row.appendChild(
-        createHiddenInput(`beneficiaries[${beneficiaryIndex}][${key}]`, value)
+        createHiddenInput(`beneficiaries[${beneficiaryIndex}][${key}]`, value),
       );
     });
 

@@ -8,12 +8,7 @@ class PaymentRepository extends BaseRepository
   public function getDeleteStats(): array
   {
     $row = $this->fetchOne(
-      "SELECT
-        SUM(CASE WHEN status = 'Reversed' AND payment_date = CURDATE() THEN 1 ELSE 0 END) AS reversals_today,
-        SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) AS pending_approval,
-        SUM(CASE WHEN status = 'Posted' THEN 1 ELSE 0 END) AS completed,
-        SUM(CASE WHEN status = 'Reversed' AND payment_date < CURDATE() THEN 1 ELSE 0 END) AS rejected
-       FROM payments"
+      SqlQueries::get("payment.delete_stats")
     ) ?? [];
 
     return [
@@ -27,12 +22,7 @@ class PaymentRepository extends BaseRepository
   public function getPostStats(): array
   {
     $row = $this->fetchOne(
-      "SELECT
-        SUM(CASE WHEN payment_date = CURDATE() THEN 1 ELSE 0 END) AS payments_today,
-        SUM(CASE WHEN method = 'Cash' THEN 1 ELSE 0 END) AS cash,
-        SUM(CASE WHEN method = 'Bank Transfer' THEN 1 ELSE 0 END) AS bank_transfer,
-        SUM(CASE WHEN method = 'Auto Debit' THEN 1 ELSE 0 END) AS auto_debit
-       FROM payments"
+      SqlQueries::get("payment.post_stats")
     ) ?? [];
 
     return [
@@ -47,16 +37,7 @@ class PaymentRepository extends BaseRepository
   {
     $limit = max(1, $limit);
     $rows = $this->fetchAll(
-      "SELECT
-        p.payment_id,
-        p.status,
-        c.first_name,
-        c.last_name
-       FROM payments p
-       LEFT JOIN loans l ON l.id = p.loan_id
-       LEFT JOIN clients c ON c.id = l.client_id
-       ORDER BY p.created_at DESC
-       LIMIT {$limit}"
+      sprintf(SqlQueries::get("payment.recent"), $limit)
     );
 
     $payments = [];
@@ -82,19 +63,7 @@ class PaymentRepository extends BaseRepository
   public function getPostedPayments(): array
   {
     $rows = $this->fetchAll(
-      "SELECT
-        p.payment_id,
-        p.amount,
-        p.payment_date,
-        p.method,
-        p.status,
-        c.first_name,
-        c.last_name
-       FROM payments p
-       LEFT JOIN loans l ON l.id = p.loan_id
-       LEFT JOIN clients c ON c.id = l.client_id
-       WHERE p.status = 'Posted'
-       ORDER BY p.payment_date DESC"
+      SqlQueries::get("payment.posted")
     );
 
     $payments = [];
@@ -118,10 +87,7 @@ class PaymentRepository extends BaseRepository
   public function getEditAmortizationStats(): array
   {
     $row = $this->fetchOne(
-      "SELECT
-        COUNT(DISTINCT loan_id) AS accounts_reviewed,
-        SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) AS new_schedules
-       FROM amortizations"
+      SqlQueries::get("payment.edit_amort_stats")
     ) ?? [];
 
     return [
@@ -139,10 +105,7 @@ class PaymentRepository extends BaseRepository
     }
 
     return $this->fetchAll(
-      "SELECT due_date, principal, interest, penalty, total, note
-       FROM amortizations
-       WHERE loan_id = :loan_id
-       ORDER BY due_date ASC",
+      SqlQueries::get("payment.amortization_schedule"),
       [
         ":loan_id" => $loanId,
       ]

@@ -8,12 +8,7 @@ class LoanRepository extends BaseRepository
   public function getPendingStats(): array
   {
     $row = $this->fetchOne(
-      "SELECT
-        SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) AS pending_review,
-        SUM(CASE WHEN status = 'Pending' AND (collateral IS NULL OR collateral = '') THEN 1 ELSE 0 END) AS needs_documents,
-        SUM(CASE WHEN status = 'Pending' AND priority = 'High' THEN 1 ELSE 0 END) AS supervisor_review,
-        SUM(CASE WHEN status = 'Pending' AND submitted_date < DATE_SUB(CURDATE(), INTERVAL 14 DAY) THEN 1 ELSE 0 END) AS overdue
-       FROM loan_applications"
+      SqlQueries::get("loan.pending_stats")
     ) ?? [];
 
     return [
@@ -27,12 +22,7 @@ class LoanRepository extends BaseRepository
   public function getApplicationStats(): array
   {
     $row = $this->fetchOne(
-      "SELECT
-        SUM(CASE WHEN submitted_date = CURDATE() THEN 1 ELSE 0 END) AS applications_today,
-        SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) AS waiting_approval,
-        SUM(CASE WHEN status = 'Approved' THEN 1 ELSE 0 END) AS auto_approved,
-        SUM(CASE WHEN priority = 'High' THEN 1 ELSE 0 END) AS high_risk
-       FROM loan_applications"
+      SqlQueries::get("loan.application_stats")
     ) ?? [];
 
     return [
@@ -46,17 +36,7 @@ class LoanRepository extends BaseRepository
   public function getPendingApplications(): array
   {
     $rows = $this->fetchAll(
-      "SELECT
-        a.application_id,
-        a.requested_amount,
-        a.submitted_date,
-        a.priority,
-        c.first_name,
-        c.last_name
-       FROM loan_applications a
-       LEFT JOIN clients c ON c.id = a.client_id
-       WHERE a.status = 'Pending'
-       ORDER BY a.submitted_date DESC"
+      SqlQueries::get("loan.pending_list")
     );
 
     $applications = [];
@@ -79,12 +59,7 @@ class LoanRepository extends BaseRepository
   public function getReleaseStats(): array
   {
     $row = $this->fetchOne(
-      "SELECT
-        SUM(CASE WHEN status = 'Ready' THEN 1 ELSE 0 END) AS ready_for_release,
-        SUM(CASE WHEN release_date = CURDATE() THEN 1 ELSE 0 END) AS released_today,
-        SUM(CASE WHEN status = 'Scheduled' THEN 1 ELSE 0 END) AS scheduled_releases,
-        SUM(CASE WHEN status = 'Hold' THEN 1 ELSE 0 END) AS on_hold
-       FROM loan_releases"
+      SqlQueries::get("loan.release_stats")
     ) ?? [];
 
     return [
@@ -98,19 +73,7 @@ class LoanRepository extends BaseRepository
   public function getApprovedReleases(): array
   {
     $rows = $this->fetchAll(
-      "SELECT
-        l.loan_id,
-        l.amount,
-        l.term_months,
-        l.approval_date,
-        r.status,
-        c.first_name,
-        c.last_name
-       FROM loans l
-       LEFT JOIN loan_releases r ON r.loan_id = l.id
-       LEFT JOIN clients c ON c.id = l.client_id
-       WHERE l.status IN ('Active', 'Delinquent')
-       ORDER BY l.approval_date DESC"
+      SqlQueries::get("loan.approved_releases")
     );
 
     $releases = [];
@@ -134,10 +97,7 @@ class LoanRepository extends BaseRepository
   public function getReleaseDeletionStats(): array
   {
     $row = $this->fetchOne(
-      "SELECT
-        SUM(CASE WHEN status = 'Hold' THEN 1 ELSE 0 END) AS deletes_pending,
-        SUM(CASE WHEN status = 'Scheduled' THEN 1 ELSE 0 END) AS supervisor_approvals
-       FROM loan_releases"
+      SqlQueries::get("loan.release_deletion_stats")
     ) ?? [];
 
     return [
@@ -151,17 +111,7 @@ class LoanRepository extends BaseRepository
   public function getReleaseDeletions(): array
   {
     $rows = $this->fetchAll(
-      "SELECT
-        r.release_id,
-        r.amount,
-        r.release_date,
-        c.first_name,
-        c.last_name
-       FROM loan_releases r
-       LEFT JOIN loans l ON l.id = r.loan_id
-       LEFT JOIN clients c ON c.id = l.client_id
-       WHERE r.status = 'Hold'
-       ORDER BY r.release_date DESC"
+      SqlQueries::get("loan.release_deletions")
     );
 
     $deletions = [];
@@ -183,31 +133,7 @@ class LoanRepository extends BaseRepository
   public function createLoanApplication(array $data): int
   {
     $this->execute(
-      "INSERT INTO loan_applications (
-        application_id,
-        client_id,
-        requested_amount,
-        monthly_income,
-        employment_info,
-        terms_months,
-        collateral,
-        guarantor,
-        status,
-        priority,
-        submitted_date
-      ) VALUES (
-        :application_id,
-        :client_id,
-        :requested_amount,
-        :monthly_income,
-        :employment_info,
-        :terms_months,
-        :collateral,
-        :guarantor,
-        :status,
-        :priority,
-        :submitted_date
-      )",
+      SqlQueries::get("loan.application_insert"),
       [
         ":application_id" => $data["application_id"],
         ":client_id" => $data["client_id"],
@@ -240,16 +166,14 @@ class LoanRepository extends BaseRepository
       $params[":{$key}"] = $value;
     }
 
-    $sql = "UPDATE loan_applications SET " . implode(", ", $columns) . " WHERE id = :id";
+    $sql = sprintf(SqlQueries::get("loan.application_update"), implode(", ", $columns));
     return $this->execute($sql, $params);
   }
 
   public function generateApplicationId(): string
   {
     $row = $this->fetchOne(
-      "SELECT MAX(CAST(SUBSTRING(application_id, 5) AS UNSIGNED)) AS max_id
-       FROM loan_applications
-       WHERE application_id LIKE 'APP-%'"
+      SqlQueries::get("loan.application_max_id")
     );
 
     $next = ((int) ($row["max_id"] ?? 0)) + 1;
@@ -259,25 +183,7 @@ class LoanRepository extends BaseRepository
   public function createLoan(array $data): int
   {
     $this->execute(
-      "INSERT INTO loans (
-        loan_id,
-        client_id,
-        product_id,
-        amount,
-        balance,
-        term_months,
-        approval_date,
-        status
-      ) VALUES (
-        :loan_id,
-        :client_id,
-        :product_id,
-        :amount,
-        :balance,
-        :term_months,
-        :approval_date,
-        :status
-      )",
+      SqlQueries::get("loan.insert"),
       [
         ":loan_id" => $data["loan_id"],
         ":client_id" => $data["client_id"],
@@ -307,14 +213,14 @@ class LoanRepository extends BaseRepository
       $params[":{$key}"] = $value;
     }
 
-    $sql = "UPDATE loans SET " . implode(", ", $columns) . " WHERE id = :id";
+    $sql = sprintf(SqlQueries::get("loan.update"), implode(", ", $columns));
     return $this->execute($sql, $params);
   }
 
   public function deleteLoan(int $loanId): bool
   {
     return $this->execute(
-      "DELETE FROM loans WHERE id = :id",
+      SqlQueries::get("loan.delete"),
       [
         ":id" => $loanId,
       ]
@@ -324,9 +230,7 @@ class LoanRepository extends BaseRepository
   public function generateLoanId(): string
   {
     $row = $this->fetchOne(
-      "SELECT MAX(CAST(SUBSTRING(loan_id, 4) AS UNSIGNED)) AS max_id
-       FROM loans
-       WHERE loan_id LIKE 'LN-%'"
+      SqlQueries::get("loan.max_id")
     );
 
     $next = ((int) ($row["max_id"] ?? 0)) + 1;

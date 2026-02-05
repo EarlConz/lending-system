@@ -8,12 +8,7 @@ class ReportRepository extends BaseRepository
   public function getListingStats(): array
   {
     $row = $this->fetchOne(
-      "SELECT
-        COUNT(*) AS saved_templates,
-        SUM(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) AS exports_week,
-        SUM(CASE WHEN status = 'Shared' THEN 1 ELSE 0 END) AS shared,
-        SUM(CASE WHEN status = 'Private' THEN 1 ELSE 0 END) AS drafts
-       FROM reports_saved_listings"
+      SqlQueries::get("report.listing_stats")
     ) ?? [];
 
     return [
@@ -27,9 +22,7 @@ class ReportRepository extends BaseRepository
   public function getSavedListings(): array
   {
     $rows = $this->fetchAll(
-      "SELECT name, status
-       FROM reports_saved_listings
-       ORDER BY created_at DESC"
+      SqlQueries::get("report.saved_listings")
     );
 
     $listings = [];
@@ -49,12 +42,7 @@ class ReportRepository extends BaseRepository
   public function getLoanListingStats(): array
   {
     $row = $this->fetchOne(
-      "SELECT
-        COUNT(*) AS total_loans,
-        SUM(CASE WHEN status = 'Active' THEN 1 ELSE 0 END) AS active,
-        SUM(CASE WHEN status = 'Closed' THEN 1 ELSE 0 END) AS closed,
-        SUM(CASE WHEN status = 'Delinquent' THEN 1 ELSE 0 END) AS delinquent
-       FROM loans"
+      SqlQueries::get("report.loan_listing_stats")
     ) ?? [];
 
     return [
@@ -68,16 +56,7 @@ class ReportRepository extends BaseRepository
   public function getLoanListing(): array
   {
     $rows = $this->fetchAll(
-      "SELECT
-        l.loan_id,
-        l.amount,
-        l.balance,
-        l.status,
-        c.first_name,
-        c.last_name
-       FROM loans l
-       LEFT JOIN clients c ON c.id = l.client_id
-       ORDER BY l.created_at DESC"
+      SqlQueries::get("report.loan_listing")
     );
 
     $loans = [];
@@ -100,10 +79,7 @@ class ReportRepository extends BaseRepository
   public function getLoanPaymentStats(): array
   {
     $row = $this->fetchOne(
-      "SELECT
-        COUNT(*) AS payments,
-        SUM(CASE WHEN status = 'Posted' THEN 1 ELSE 0 END) AS posted
-       FROM payments"
+      SqlQueries::get("report.loan_payment_stats")
     ) ?? [];
 
     $total = (int) ($row["payments"] ?? 0);
@@ -111,8 +87,7 @@ class ReportRepository extends BaseRepository
     $onTimeRate = $total > 0 ? round(($posted / $total) * 100) . "%" : "0%";
 
     $delinquent = $this->fetchOne(
-      "SELECT SUM(CASE WHEN status = 'Delinquent' THEN 1 ELSE 0 END) AS delinquent
-       FROM loans"
+      SqlQueries::get("report.delinquent_count")
     );
 
     return [
@@ -126,19 +101,7 @@ class ReportRepository extends BaseRepository
   public function getLoanPayments(): array
   {
     $rows = $this->fetchAll(
-      "SELECT
-        l.loan_id,
-        c.first_name,
-        c.last_name,
-        a.total AS amount,
-        a.due_date,
-        IFNULL(SUM(p.amount), 0) AS paid_amount
-       FROM amortizations a
-       LEFT JOIN loans l ON l.id = a.loan_id
-       LEFT JOIN clients c ON c.id = l.client_id
-       LEFT JOIN payments p ON p.loan_id = l.id
-       GROUP BY a.id, l.loan_id, c.first_name, c.last_name, a.total, a.due_date
-       ORDER BY a.due_date DESC"
+      SqlQueries::get("report.loan_payments")
     );
 
     $payments = [];
@@ -162,14 +125,7 @@ class ReportRepository extends BaseRepository
   public function getLoanReleaseStats(): array
   {
     $row = $this->fetchOne(
-      "SELECT
-        COUNT(*) AS releases,
-        IFNULL(SUM(r.amount), 0) AS total_value,
-        COUNT(DISTINCT c.branch_id) AS branches,
-        COUNT(DISTINCT l.product_id) AS products
-       FROM loan_releases r
-       LEFT JOIN loans l ON l.id = r.loan_id
-       LEFT JOIN clients c ON c.id = l.client_id"
+      SqlQueries::get("report.loan_release_stats")
     ) ?? [];
 
     return [
@@ -183,18 +139,7 @@ class ReportRepository extends BaseRepository
   public function getLoanReleases(): array
   {
     $rows = $this->fetchAll(
-      "SELECT
-        r.release_id,
-        r.amount,
-        r.release_date,
-        p.name AS product,
-        c.first_name,
-        c.last_name
-       FROM loan_releases r
-       LEFT JOIN loans l ON l.id = r.loan_id
-       LEFT JOIN loan_products p ON p.id = l.product_id
-       LEFT JOIN clients c ON c.id = l.client_id
-       ORDER BY r.release_date DESC"
+      SqlQueries::get("report.loan_releases")
     );
 
     $releases = [];
@@ -214,9 +159,7 @@ class ReportRepository extends BaseRepository
   public function getPaidLoanStats(): array
   {
     $row = $this->fetchOne(
-      "SELECT
-        SUM(CASE WHEN status = 'Closed' AND YEAR(approval_date) = YEAR(CURDATE()) THEN 1 ELSE 0 END) AS paid_year
-       FROM loans"
+      SqlQueries::get("report.paid_loan_stats")
     ) ?? [];
 
     return [
@@ -230,16 +173,7 @@ class ReportRepository extends BaseRepository
   public function getPaidLoans(): array
   {
     $rows = $this->fetchAll(
-      "SELECT
-        l.loan_id,
-        l.amount,
-        l.approval_date,
-        c.first_name,
-        c.last_name
-       FROM loans l
-       LEFT JOIN clients c ON c.id = l.client_id
-       WHERE l.status = 'Closed'
-       ORDER BY l.approval_date DESC"
+      SqlQueries::get("report.paid_loans")
     );
 
     $loans = [];
@@ -259,14 +193,10 @@ class ReportRepository extends BaseRepository
   public function getTransactionStats(): array
   {
     $paymentsRow = $this->fetchOne(
-      "SELECT COUNT(*) AS payments, IFNULL(SUM(amount), 0) AS total
-       FROM payments
-       WHERE payment_date = CURDATE()"
+      SqlQueries::get("report.transaction_payments")
     ) ?? [];
     $releasesRow = $this->fetchOne(
-      "SELECT COUNT(*) AS releases, IFNULL(SUM(amount), 0) AS total
-       FROM loan_releases
-       WHERE release_date = CURDATE()"
+      SqlQueries::get("report.transaction_releases")
     ) ?? [];
 
     $payments = (int) ($paymentsRow["payments"] ?? 0);
@@ -283,17 +213,7 @@ class ReportRepository extends BaseRepository
   public function getTransactionSummary(): array
   {
     $rows = $this->fetchAll(
-      "SELECT 'Payments' AS type,
-              COUNT(*) AS count,
-              IFNULL(SUM(amount), 0) AS total
-       FROM payments
-       WHERE payment_date = CURDATE()
-       UNION ALL
-       SELECT 'Releases' AS type,
-              COUNT(*) AS count,
-              IFNULL(SUM(amount), 0) AS total
-       FROM loan_releases
-       WHERE release_date = CURDATE()"
+      SqlQueries::get("report.transaction_summary")
     );
 
     return $rows;

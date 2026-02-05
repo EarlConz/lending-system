@@ -8,12 +8,7 @@ class ClientRepository extends BaseRepository
   public function getDashboardStats(): array
   {
     $row = $this->fetchOne(
-      "SELECT
-        COUNT(*) AS active,
-        SUM(CASE WHEN verification_status = 'Needs Follow-up' THEN 1 ELSE 0 END) AS pending_verification,
-        SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) AS new_applications,
-        SUM(CASE WHEN risk_category IN ('PEP', 'DOSRI', 'RPT') THEN 1 ELSE 0 END) AS high_risk
-       FROM clients"
+      SqlQueries::get("client.dashboard_stats")
     ) ?? [];
 
     return [
@@ -28,10 +23,7 @@ class ClientRepository extends BaseRepository
   {
     $limit = max(1, $limit);
     $rows = $this->fetchAll(
-      "SELECT id, first_name, middle_name, last_name
-       FROM clients
-       ORDER BY created_at DESC
-       LIMIT {$limit}"
+      sprintf(SqlQueries::get("client.recent"), $limit)
     );
 
     $clients = [];
@@ -56,12 +48,7 @@ class ClientRepository extends BaseRepository
   public function getEditStats(): array
   {
     $row = $this->fetchOne(
-      "SELECT
-        SUM(CASE WHEN last_review_date = CURDATE() THEN 1 ELSE 0 END) AS edits_today,
-        SUM(CASE WHEN verification_status = 'Needs Follow-up' THEN 1 ELSE 0 END) AS pending_review,
-        SUM(CASE WHEN secondary_id IS NOT NULL AND secondary_id <> '' THEN 1 ELSE 0 END) AS id_updates,
-        SUM(CASE WHEN risk_category IN ('PEP', 'DOSRI', 'RPT') THEN 1 ELSE 0 END) AS risk_escalations
-       FROM clients"
+      SqlQueries::get("client.edit_stats")
     ) ?? [];
 
     return [
@@ -76,13 +63,7 @@ class ClientRepository extends BaseRepository
   {
     $limit = max(1, $limit);
     $rows = $this->fetchAll(
-      "SELECT id, first_name, last_name, verification_status, last_review_date
-       FROM clients
-       ORDER BY
-         CASE WHEN last_review_date IS NULL THEN 0 ELSE 1 END,
-         last_review_date ASC,
-         created_at DESC
-       LIMIT {$limit}"
+      sprintf(SqlQueries::get("client.needing_updates"), $limit)
     );
 
     $clients = [];
@@ -106,10 +87,7 @@ class ClientRepository extends BaseRepository
     }
 
     $rows = $this->fetchAll(
-      "SELECT id, relation, first_name, middle_name, last_name, birthdate, gender
-       FROM client_beneficiaries
-       WHERE client_id = :client_id
-       ORDER BY created_at DESC",
+      SqlQueries::get("client.beneficiaries"),
       [
         ":client_id" => $clientId,
       ]
@@ -147,23 +125,7 @@ class ClientRepository extends BaseRepository
     }
 
     $row = $this->fetchOne(
-      "SELECT
-        branch_id,
-        borrower_id,
-        first_name,
-        middle_name,
-        last_name,
-        phone_primary,
-        email,
-        risk_category,
-        verification_status,
-        present_address,
-        emergency_contact,
-        last_review_date,
-        assigned_officer
-       FROM clients
-       WHERE id = :id
-       LIMIT 1",
+      SqlQueries::get("client.by_id"),
       [
         ":id" => $clientId,
       ]
@@ -207,93 +169,7 @@ class ClientRepository extends BaseRepository
   public function createClient(array $data): int
   {
     $this->execute(
-      "INSERT INTO clients (
-        branch_id,
-        client_type,
-        borrower_id,
-        last_name,
-        first_name,
-        middle_name,
-        birthdate,
-        birthplace,
-        nationality,
-        gender,
-        civil_status,
-        email,
-        facebook,
-        source_of_fund,
-        employment_occupation,
-        employer_name,
-        employment_address,
-        employment_barangay,
-        employment_position,
-        employment_contact,
-        employment_year_started,
-        employment_gross_monthly_income,
-        business_name,
-        business_address,
-        business_barangay,
-        business_contact,
-        business_year_started,
-        business_gross_monthly_income,
-        other_occupation,
-        other_source_of_income,
-        other_gross_monthly_income,
-        phone_primary,
-        phone_secondary,
-        landline_primary,
-        landline_secondary,
-        present_address,
-        permanent_address,
-        emergency_contact,
-        emergency_phone,
-        id_number,
-        secondary_id,
-        secondary_id_expiry
-      ) VALUES (
-        :branch_id,
-        :client_type,
-        :borrower_id,
-        :last_name,
-        :first_name,
-        :middle_name,
-        :birthdate,
-        :birthplace,
-        :nationality,
-        :gender,
-        :civil_status,
-        :email,
-        :facebook,
-        :source_of_fund,
-        :employment_occupation,
-        :employer_name,
-        :employment_address,
-        :employment_barangay,
-        :employment_position,
-        :employment_contact,
-        :employment_year_started,
-        :employment_gross_monthly_income,
-        :business_name,
-        :business_address,
-        :business_barangay,
-        :business_contact,
-        :business_year_started,
-        :business_gross_monthly_income,
-        :other_occupation,
-        :other_source_of_income,
-        :other_gross_monthly_income,
-        :phone_primary,
-        :phone_secondary,
-        :landline_primary,
-        :landline_secondary,
-        :present_address,
-        :permanent_address,
-        :emergency_contact,
-        :emergency_phone,
-        :id_number,
-        :secondary_id,
-        :secondary_id_expiry
-      )",
+      SqlQueries::get("client.insert"),
       [
         ":branch_id" => $data["branch_id"],
         ":client_type" => $data["client_type"],
@@ -357,14 +233,14 @@ class ClientRepository extends BaseRepository
       $params[":{$key}"] = $value;
     }
 
-    $sql = "UPDATE clients SET " . implode(", ", $columns) . " WHERE id = :id";
+    $sql = sprintf(SqlQueries::get("client.update"), implode(", ", $columns));
     return $this->execute($sql, $params);
   }
 
   public function deleteClient(int $clientId): bool
   {
     return $this->execute(
-      "DELETE FROM clients WHERE id = :id",
+      SqlQueries::get("client.delete"),
       [
         ":id" => $clientId,
       ]
@@ -373,24 +249,23 @@ class ClientRepository extends BaseRepository
 
   public function borrowerIdExists(string $borrowerId, ?int $excludeId = null): bool
   {
-    $sql = "SELECT id FROM clients WHERE borrower_id = :borrower_id";
     $params = [":borrower_id" => $borrowerId];
 
     if ($excludeId !== null) {
-      $sql .= " AND id <> :exclude_id";
       $params[":exclude_id"] = $excludeId;
+      $sql = SqlQueries::get("client.borrower_id_exists_excluding");
+    } else {
+      $sql = SqlQueries::get("client.borrower_id_exists");
     }
 
-    $row = $this->fetchOne($sql . " LIMIT 1", $params);
+    $row = $this->fetchOne($sql, $params);
     return $row !== null;
   }
 
   public function generateBorrowerId(): string
   {
     $row = $this->fetchOne(
-      "SELECT MAX(CAST(SUBSTRING(borrower_id, 4) AS UNSIGNED)) AS max_id
-       FROM clients
-       WHERE borrower_id LIKE 'BR-%'"
+      SqlQueries::get("client.max_borrower_id")
     );
 
     $next = ((int) ($row["max_id"] ?? 0)) + 1;
@@ -400,23 +275,7 @@ class ClientRepository extends BaseRepository
   public function createBeneficiary(int $clientId, array $data): int
   {
     $this->execute(
-      "INSERT INTO client_beneficiaries (
-        client_id,
-        relation,
-        first_name,
-        middle_name,
-        last_name,
-        birthdate,
-        gender
-      ) VALUES (
-        :client_id,
-        :relation,
-        :first_name,
-        :middle_name,
-        :last_name,
-        :birthdate,
-        :gender
-      )",
+      SqlQueries::get("client.beneficiary_insert"),
       [
         ":client_id" => $clientId,
         ":relation" => $data["relation"],
@@ -434,7 +293,7 @@ class ClientRepository extends BaseRepository
   public function deleteBeneficiary(int $beneficiaryId, int $clientId): bool
   {
     return $this->execute(
-      "DELETE FROM client_beneficiaries WHERE id = :id AND client_id = :client_id",
+      SqlQueries::get("client.beneficiary_delete"),
       [
         ":id" => $beneficiaryId,
         ":client_id" => $clientId,
@@ -445,10 +304,7 @@ class ClientRepository extends BaseRepository
   public function findByBorrowerId(string $borrowerId): ?array
   {
     return $this->fetchOne(
-      "SELECT id, borrower_id, first_name, last_name
-       FROM clients
-       WHERE borrower_id = :borrower_id
-       LIMIT 1",
+      SqlQueries::get("client.find_by_borrower_id"),
       [
         ":borrower_id" => $borrowerId,
       ]

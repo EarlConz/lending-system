@@ -7,20 +7,23 @@ class UserRepository extends BaseRepository
 {
   public function getAllUsers(): array
   {
-    return $this->fetchAll("SELECT id, username, role, created_at FROM users ORDER BY created_at DESC");
+    return $this->fetchAll(SqlQueries::get("user.all"));
   }
 
   public function findByUsername(string $username): ?array
   {
-    return $this->fetchOne("SELECT id, username, role FROM users WHERE username = :username LIMIT 1", [
-      ":username" => $username,
-    ]);
+    return $this->fetchOne(
+      SqlQueries::get("user.by_username"),
+      [
+        ":username" => $username,
+      ]
+    );
   }
 
   public function createUser(string $username, string $role = "Staff"): array
   {
     $this->execute(
-      "INSERT INTO users (username, role) VALUES (:username, :role)",
+      SqlQueries::get("user.insert"),
       [
         ":username" => $username,
         ":role" => $role,
@@ -38,7 +41,7 @@ class UserRepository extends BaseRepository
   public function updateRole(int $userId, string $role): bool
   {
     return $this->execute(
-      "UPDATE users SET role = :role WHERE id = :id",
+      SqlQueries::get("user.update_role"),
       [
         ":role" => $role,
         ":id" => $userId,

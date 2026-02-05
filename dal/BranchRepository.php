@@ -8,9 +8,7 @@ class BranchRepository extends BaseRepository
   public function getAllBranches(): array
   {
     return $this->fetchAll(
-      "SELECT id, code, name
-       FROM branches
-       ORDER BY name ASC"
+      SqlQueries::get("branch.all")
     );
   }
 }

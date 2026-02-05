@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . "/../database/Database.php";
+require_once __DIR__ . "/SqlQueries.php";
 
 abstract class BaseRepository
 {
@@ -29,5 +30,21 @@ abstract class BaseRepository
   {
     $stmt = $this->db()->prepare($sql);
     return $stmt->execute($params);
+  }
+
+  public function withTransaction(callable $callback)
+  {
+    $db = $this->db();
+    try {
+      $db->beginTransaction();
+      $result = $callback();
+      $db->commit();
+      return $result;
+    } catch (Throwable $exception) {
+      if ($db->inTransaction()) {
+        $db->rollBack();
+      }
+      throw $exception;
+    }
   }
 }

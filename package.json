@@ -1,0 +1,28 @@
+{
+  "name": "lending_systeme",
+  "version": "1.0.0",
+  "description": "This project is a web-based lending system built with PHP. It manages clients, loan applications, payments, and various financial reports.",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "tailwindcss -i public/assets/css/tailwind.css -o public/assets/css/tailwind-build.css --minify",
+    "watch:css": "tailwindcss -i public/assets/css/tailwind.css -o public/assets/css/tailwind-build.css --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EarlConz/lending-system.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/EarlConz/lending-system/issues"
+  },
+  "homepage": "https://github.com/EarlConz/lending-system#readme",
+  "devDependencies": {
+    "autoprefixer": "^10.4.24",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17"
+  }
+}

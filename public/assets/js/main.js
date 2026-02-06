@@ -523,6 +523,67 @@ document.addEventListener("DOMContentLoaded", () => {
     button.addEventListener("click", () => window.print());
   });
 
+  const initCacobemUnderlineWidths = () => {
+    const preview = document.querySelector(".cacobem-doc-full");
+    if (!preview) {
+      return;
+    }
+
+    const previewStyle = window.getComputedStyle(preview);
+    const measure = document.createElement("span");
+    measure.style.position = "absolute";
+    measure.style.visibility = "hidden";
+    measure.style.whiteSpace = "pre";
+    measure.style.fontFamily = previewStyle.fontFamily;
+    measure.style.fontSize = previewStyle.fontSize;
+    measure.style.fontWeight = previewStyle.fontWeight;
+    const sampleCount = 100;
+    measure.textContent = "_".repeat(sampleCount);
+    document.body.appendChild(measure);
+    const underscoreWidth = measure.getBoundingClientRect().width / sampleCount;
+    measure.remove();
+
+    preview.querySelectorAll("input[data-underline]").forEach((input) => {
+      const count = parseInt(input.dataset.underline || "0", 10);
+      if (!count) {
+        return;
+      }
+      const width = Math.ceil(underscoreWidth * count);
+      input.style.width = `${width}px`;
+    });
+  };
+
+  const initCacobemPreviewZoom = () => {
+    const preview = document.querySelector(".cacobem-doc-full");
+    if (!preview) {
+      return;
+    }
+
+    const updateZoom = () => {
+      const container = preview.parentElement || preview;
+      const containerWidth = container.clientWidth;
+      if (!containerWidth) {
+        return;
+      }
+
+      const baseWidth = 8.5 * 96;
+      const scale = Math.min(1.35, Math.max(0.8, containerWidth / baseWidth));
+      preview.style.setProperty("--cacobem-preview-zoom", scale.toFixed(3));
+    };
+
+    updateZoom();
+    window.addEventListener("resize", updateZoom);
+  };
+
+  initCacobemUnderlineWidths();
+  initCacobemPreviewZoom();
+  window.addEventListener("resize", initCacobemUnderlineWidths);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      initCacobemUnderlineWidths();
+    });
+  }
+
   const modalRoot = document.querySelector("[data-modal-root]");
   if (modalRoot) {
     const overlay = modalRoot.querySelector("[data-modal-overlay]");

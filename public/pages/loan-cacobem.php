@@ -299,12 +299,10 @@
         <input type="hidden" name="action" value="update_cacobem" />
         <input type="hidden" name="cacobem_id" value="<?php echo htmlspecialchars((string) ($selectedRecord["id"] ?? "")); ?>" />
 
-        <div class="cacobem-doc">
+        <div class="cacobem-doc cacobem-doc-full">
           <?php
-            $cacobemShowAuthorizationDuplicate = true;
-            $cacobemShowDuplicates = true;
-            require "../partials/cacobem-page1.php";
-            require "../partials/cacobem-page2.php";
+            require "../partials/cacobem-doc-page1.php";
+            require "../partials/cacobem-doc-page2.php";
           ?>
         </div>
       </form>

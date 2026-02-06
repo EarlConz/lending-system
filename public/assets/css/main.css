@@ -1010,6 +1010,8 @@ select {
 
 .cacobem-card {
   background: #fff;
+  width: 100%;
+  max-width: none;
 }
 
 .print-hidden {
@@ -1042,5 +1044,321 @@ select {
     box-shadow: none;
     border: none;
     padding: 0;
+  }
+}
+
+.cacobem-doc-full {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 10pt;
+  line-height: 1.2;
+  --cacobem-preview-zoom: 1;
+  zoom: var(--cacobem-preview-zoom);
+}
+
+.cacobem-sheet {
+  --cacobem-content-width: 535.45pt;
+  width: 8.5in;
+  min-height: 13in;
+  margin: 0 auto 24px;
+  padding: 1in 0.5in 0.25in;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.cacobem-header {
+  text-align: center;
+  margin-bottom: 4pt;
+}
+
+.cacobem-header-line {
+  font-size: 18pt;
+  letter-spacing: 0;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.cacobem-title-doc {
+  text-align: center;
+  font-weight: 700;
+  font-size: 16pt;
+  letter-spacing: 0;
+  margin: 4pt 0 4pt;
+}
+
+.cacobem-section-title {
+  text-align: center;
+  font-weight: 400;
+  font-size: 10pt;
+  margin: 6pt 0 4pt;
+}
+
+.cacobem-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 1ch;
+  margin-bottom: 0;
+  line-height: 12pt;
+}
+
+.cacobem-line.tight {
+  gap: 0.5ch;
+}
+
+.cacobem-line.no-wrap {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.cacobem-line.spaced {
+  line-height: 18pt;
+}
+
+.cacobem-line.center {
+  justify-content: center;
+  text-align: center;
+}
+
+.cacobem-line.witness {
+  width: var(--cacobem-content-width);
+  justify-content: space-between;
+  margin: 0 auto;
+  gap: 0;
+}
+
+.cacobem-paragraph {
+  margin: 0 0 4pt;
+  line-height: 12pt;
+  text-align: justify;
+}
+
+.cacobem-paragraph.indent {
+  text-indent: 0.5in;
+}
+
+.cacobem-label-inline {
+  font-weight: 400;
+}
+
+.cacobem-inline-text {
+  font-weight: 400;
+}
+
+.cacobem-bold {
+  font-weight: 700;
+}
+
+.cacobem-sworn {
+  font-size: 12pt;
+  line-height: 14pt;
+}
+
+.cacobem-input-inline {
+  border: none;
+  border-bottom: 0.8pt solid #111;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  display: inline-block;
+  vertical-align: baseline;
+  box-sizing: border-box;
+}
+
+.cacobem-doc-full .cacobem-input-inline {
+  width: auto;
+  max-width: none;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0;
+  border-bottom: 0.8pt solid #111;
+}
+
+.cacobem-input-inline.fill {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cacobem-underline-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2pt;
+  width: max-content;
+}
+
+.cacobem-input-inline.short {
+  width: 48pt;
+}
+
+.cacobem-input-inline.med {
+  width: 86pt;
+}
+
+.cacobem-input-inline.long {
+  width: 165pt;
+}
+
+.cacobem-input-inline.wide {
+  width: 140pt;
+}
+
+.cacobem-input-inline.full {
+  flex: 1 1 100%;
+  min-width: 100%;
+}
+
+.cacobem-input-inline.date {
+  padding-right: 2pt;
+}
+
+.cacobem-input-inline.field-xxs {
+  width: 28pt;
+}
+
+.cacobem-input-inline.field-xs {
+  width: 45pt;
+}
+
+.cacobem-input-inline.field-sm {
+  width: 70pt;
+}
+
+.cacobem-input-inline.field-md {
+  width: 100pt;
+}
+
+.cacobem-input-inline.field-lg {
+  width: 140pt;
+}
+
+.cacobem-input-inline.field-xl {
+  width: 200pt;
+}
+
+.cacobem-input-inline.field-xxl {
+  width: 260pt;
+}
+
+.cacobem-sign-row {
+  display: flex;
+  gap: 0;
+  justify-content: space-between;
+  width: calc(var(--cacobem-content-width) - 0.5in);
+  margin: 10pt 0 6pt 0.5in;
+  align-items: flex-start;
+}
+
+.cacobem-sign-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  width: max-content;
+}
+
+.cacobem-sign-label {
+  font-size: 9pt;
+  text-align: center;
+}
+
+.cacobem-box {
+  border: 1pt solid #111;
+  padding: 3.6pt 7.2pt;
+  box-sizing: border-box;
+}
+
+.cacobem-box-title {
+  text-align: center;
+  font-weight: 700;
+  font-size: 10pt;
+  letter-spacing: 0;
+  margin-bottom: 2pt;
+}
+
+.cacobem-box-title.auth {
+  font-size: 12pt;
+}
+
+.cacobem-box-full {
+  margin-top: 8pt;
+  width: var(--cacobem-content-width);
+  min-height: 115.75pt;
+}
+
+.cacobem-columns {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  width: var(--cacobem-content-width);
+  margin-bottom: 10pt;
+  justify-content: space-between;
+}
+
+.cacobem-box.action {
+  width: 269.25pt;
+  flex: 0 0 auto;
+  min-height: 444.95pt;
+}
+
+.cacobem-box.discount {
+  width: 265.95pt;
+  flex: 0 0 auto;
+  min-height: 445.45pt;
+}
+
+.cacobem-radio-group {
+  display: inline-flex;
+  gap: 8pt;
+  align-items: center;
+}
+
+.cacobem-radio {
+  appearance: none;
+  width: 10pt;
+  height: 10pt;
+  border: 0.8pt solid #111;
+  display: inline-block;
+  margin-right: 3pt;
+  position: relative;
+}
+
+.cacobem-radio:checked::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: #111;
+}
+
+@media (max-width: 1100px) {
+  .cacobem-sheet {
+    width: 100%;
+    padding: 20px;
+  }
+
+  .cacobem-columns {
+    flex-direction: column;
+  }
+
+  .cacobem-box.action,
+  .cacobem-box.discount {
+    width: 100%;
+  }
+}
+
+@media print {
+  .cacobem-sheet {
+    width: 8.5in;
+    min-height: 13in;
+    margin: 0;
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .cacobem-doc-full {
+    zoom: 1;
   }
 }

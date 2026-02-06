@@ -261,6 +261,44 @@ LEFT JOIN clients c ON c.id = l.client_id
 WHERE l.status IN ('Active', 'Delinquent')
 ORDER BY l.approval_date DESC
 SQL,
+
+    // CACOBEM
+    "cacobem.insert" => <<<'SQL'
+INSERT INTO cacobem_applications (
+  client_id,
+  borrower_name,
+  application_date,
+  amount_applied,
+  data_json
+) VALUES (
+  :client_id,
+  :borrower_name,
+  :application_date,
+  :amount_applied,
+  :data_json
+)
+SQL,
+    "cacobem.update" => <<<'SQL'
+UPDATE cacobem_applications
+SET
+  client_id = :client_id,
+  borrower_name = :borrower_name,
+  application_date = :application_date,
+  amount_applied = :amount_applied,
+  data_json = :data_json
+WHERE id = :id
+SQL,
+    "cacobem.by_id" => <<<'SQL'
+SELECT id, client_id, borrower_name, application_date, amount_applied, data_json, created_at, updated_at
+FROM cacobem_applications
+WHERE id = :id
+LIMIT 1
+SQL,
+    "cacobem.list" => <<<'SQL'
+SELECT id, borrower_name, application_date, amount_applied, created_at
+FROM cacobem_applications
+ORDER BY created_at DESC
+SQL,
     "loan.release_deletion_stats" => <<<'SQL'
 SELECT
   SUM(CASE WHEN status = 'Hold' THEN 1 ELSE 0 END) AS deletes_pending,

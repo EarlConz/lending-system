@@ -34,6 +34,7 @@ if (!isset($activePage)) {
         <a class="<?php echo $activePage === "loan-released-approved" ? "active" : ""; ?>" href="../pages/loan-released-approved.php">Released Approved Loans</a>
         <a class="<?php echo $activePage === "loan-pending" ? "active" : ""; ?>" href="../pages/loan-pending.php">Pending Loan Application</a>
         <a class="<?php echo $activePage === "loan-delete-releases" ? "active" : ""; ?>" href="../pages/loan-delete-releases.php">Delete Loan Releases</a>
+        <a class="<?php echo $activePage === "loan-cacobem" ? "active" : ""; ?>" href="../pages/loan-cacobem.php">CACOBEM</a>
       </div>
     </details>
 

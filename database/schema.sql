@@ -210,6 +210,22 @@ CREATE TABLE loan_releases (
     ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- CACOBEM Applications
+CREATE TABLE cacobem_applications (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  client_id INT UNSIGNED NULL,
+  borrower_name VARCHAR(120) NULL,
+  application_date DATE NULL,
+  amount_applied DECIMAL(12,2) NULL,
+  data_json LONGTEXT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT fk_cacobem_client
+    FOREIGN KEY (client_id) REFERENCES clients(id)
+    ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=InnoDB;
+
 -- Payments
 CREATE TABLE payments (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,

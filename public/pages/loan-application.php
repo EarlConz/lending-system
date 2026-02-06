@@ -9,7 +9,10 @@
   $loanRepo = new LoanRepository();
   $clientRepo = new ClientRepository();
   $settingsRepo = new SettingsRepository();
+  $cacobemRepo = new CacobemRepository();
   $errors = [];
+  $cacobemErrors = [];
+  $cacobemSuccess = false;
 
   $loanProducts = $settingsRepo->getLoanProducts("Active");
   $clientPicklist = $clientRepo->getClientsForPicklist();
@@ -52,6 +55,83 @@
     "name" => "",
     "phone" => "",
   ];
+
+  $cacobemFieldKeys = [
+    "application_date",
+    "borrower_name",
+    "borrower_age",
+    "ctc_no",
+    "ctc_date_issued",
+    "birthdate",
+    "birth_place",
+    "place_issued",
+    "spouse_name",
+    "spouse_age",
+    "children_count",
+    "address",
+    "amount_applied",
+    "specific_purpose",
+    "borrower_signature",
+    "spouse_signature",
+    "comaker1_signature",
+    "comaker2_signature",
+    "authorization_date",
+    "authorization_schedule",
+    "authorization_amount_words",
+    "authorization_amount_php",
+    "authorization_borrower_signature",
+    "discount_loan_type",
+    "discount_term_days",
+    "discount_date_granted",
+    "discount_maturity_date",
+    "discount_amount_loan",
+    "discount_lb_int",
+    "discount_notarial_fee",
+    "discount_mri_insurance",
+    "discount_total_deductions",
+    "discount_net_proceeds",
+    "discount_prepared_by",
+    "discount_checked_by",
+    "discount_net_proceeds_words",
+    "discount_net_proceeds_php",
+    "discount_bank_account",
+    "discount_conformed_by",
+    "action_loan_ceiling",
+    "action_share_capital",
+    "action_loan_balance",
+    "action_interest_due",
+    "action_remark",
+    "action_certified_by",
+    "action_certified_date",
+    "action_security",
+    "action_share_capital_security",
+    "action_rem_tct_no",
+    "action_chattel_mortgage",
+    "action_approved_amount",
+    "pn_no",
+    "pn_date_granted",
+    "pn_maturity_date",
+    "pn_amount_granted",
+    "pn_term_value",
+    "pn_term_unit",
+    "pn_amount_words",
+    "pn_amount_php",
+    "pn_secured_by",
+    "pn_secured_date",
+    "pn_doc_no",
+    "pn_page_no",
+    "pn_book_no",
+    "pn_series_year",
+    "pn_borrower_signature",
+    "pn_spouse_signature",
+    "pn_comaker1_signature",
+    "pn_comaker2_signature",
+    "witness_1",
+    "witness_2",
+  ];
+
+  $defaultCacobemValues = array_fill_keys($cacobemFieldKeys, "");
+  $cacobemFormValues = $defaultCacobemValues;
 
   $normalizeText = function ($value): ?string {
     $value = trim((string) $value);
@@ -361,6 +441,76 @@
         exit;
       }
     }
+
+    if ($action === "create_cacobem") {
+      $postedValues = $_POST["cacobem"] ?? [];
+      foreach ($defaultCacobemValues as $key => $value) {
+        $cacobemFormValues[$key] = trim((string) ($postedValues[$key] ?? ""));
+      }
+
+      $allowedAuthSchedules = ["15th", "30th", "15/30th"];
+      if (!in_array($cacobemFormValues["authorization_schedule"], $allowedAuthSchedules, true)) {
+        $cacobemFormValues["authorization_schedule"] = "";
+      }
+
+      $allowedSecurity = ["Secured", "Unsecured"];
+      if (!in_array($cacobemFormValues["action_security"], $allowedSecurity, true)) {
+        $cacobemFormValues["action_security"] = "";
+      }
+
+      $allowedTermUnit = ["days", "years"];
+      if (!in_array($cacobemFormValues["pn_term_unit"], $allowedTermUnit, true)) {
+        $cacobemFormValues["pn_term_unit"] = "";
+      }
+
+      $borrowerName = trim($cacobemFormValues["borrower_name"]);
+      if ($borrowerName === "") {
+        $cacobemErrors[] = "Borrower name is required.";
+      }
+
+      $applicationDateRaw = trim($cacobemFormValues["application_date"]);
+      $applicationDate = null;
+      if ($applicationDateRaw === "") {
+        $cacobemErrors[] = "Application date is required.";
+      } else {
+        $date = DateTime::createFromFormat("Y-m-d", $applicationDateRaw);
+        if ($date === false || $date->format("Y-m-d") !== $applicationDateRaw) {
+          $cacobemErrors[] = "Application date must be a valid date.";
+        } else {
+          $applicationDate = $applicationDateRaw;
+        }
+      }
+
+      $amountApplied = null;
+      $amountAppliedRaw = trim($cacobemFormValues["amount_applied"]);
+      if ($amountAppliedRaw !== "") {
+        $normalized = str_replace([",", " "], "", $amountAppliedRaw);
+        if (!is_numeric($normalized)) {
+          $cacobemErrors[] = "Amount applied must be a number.";
+        } else {
+          $amountApplied = $normalized;
+        }
+      }
+
+      if (empty($cacobemErrors)) {
+        $dataJson = json_encode($cacobemFormValues, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $clientId = null;
+        if (!empty($_POST["cacobem_client_id"]) && ctype_digit((string) $_POST["cacobem_client_id"])) {
+          $clientId = (int) $_POST["cacobem_client_id"];
+        }
+
+        $cacobemRepo->create([
+          "client_id" => $clientId,
+          "borrower_name" => $borrowerName !== "" ? $borrowerName : null,
+          "application_date" => $applicationDate,
+          "amount_applied" => $amountApplied,
+          "data_json" => $dataJson ?: "{}",
+        ]);
+
+        header("Location: loan-application.php?cacobem_created=1");
+        exit;
+      }
+    }
   }
 
   $loanAppSelected = $formValues["borrower_id"] !== "";
@@ -368,6 +518,7 @@
   if ($loanAppSelected && $clientInfo["name"] !== "") {
     $clientPickerValue = $clientInfo["name"] . " (" . $formValues["borrower_id"] . ")";
   }
+  $cacobemSuccess = isset($_GET["cacobem_created"]);
 
   require "../partials/head.php";
   require "../partials/sidebar.php";
@@ -430,6 +581,9 @@
           <div>
             <label>Release Reference</label>
             <input type="text" placeholder="Optional" />
+          </div>
+          <div class="tw-md:col-span-2">
+            <button class="btn" type="button" data-cacobem-open>CACOBEM</button>
           </div>
         </div>
       </div>
@@ -755,6 +909,57 @@
             </section>
           </form>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    id="cacobemModal"
+    class="tw-fixed tw-inset-0 tw-z-50 tw-hidden"
+    style="display: none;"
+    data-cacobem-modal
+    data-open-modal="<?php echo (!empty($cacobemErrors) || $cacobemSuccess) ? "1" : "0"; ?>"
+  >
+    <div class="tw-absolute tw-inset-0 tw-bg-slate-900/50" data-cacobem-overlay></div>
+    <div class="tw-relative tw-mx-auto tw-my-10 tw-w-[94%] tw-max-w-6xl tw-rounded-2xl tw-bg-[#f7f7f7] tw-shadow-2xl tw-border tw-border-slate-200">
+      <div class="tw-flex tw-items-center tw-justify-between tw-px-6 tw-py-4 tw-border-b tw-border-slate-200">
+        <div class="tw-text-base tw-font-bold tw-tracking-wide">CACOBEM LOAN APPLICATION</div>
+        <div class="tw-flex tw-gap-2">
+          <button class="btn" type="submit" form="cacobem-form">Save CACOBEM</button>
+          <button class="btn ghost" type="button" data-cacobem-close>Close</button>
+        </div>
+      </div>
+      <div class="tw-px-6 tw-py-6">
+        <form id="cacobem-form" method="post">
+          <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrf_token()); ?>" />
+          <input type="hidden" name="action" value="create_cacobem" />
+          <input type="hidden" name="cacobem_client_id" value="" />
+
+          <?php if ($cacobemSuccess) : ?>
+            <div class="form-error" style="background: #e9f9ef; border-color: #bde7cb; color: #1d5b3a;">
+              CACOBEM application saved successfully.
+            </div>
+          <?php endif; ?>
+
+          <?php if (!empty($cacobemErrors)) : ?>
+            <div class="form-error">
+              <strong>Please review the errors below:</strong>
+              <ul>
+                <?php foreach ($cacobemErrors as $error) : ?>
+                  <li><?php echo htmlspecialchars($error); ?></li>
+                <?php endforeach; ?>
+              </ul>
+            </div>
+          <?php endif; ?>
+
+          <div class="cacobem-doc">
+            <?php
+              $cacobemValues = $cacobemFormValues;
+              $cacobemShowAuthorizationDuplicate = false;
+              require "../partials/cacobem-page1.php";
+            ?>
+          </div>
+        </form>
       </div>
     </div>
   </div>

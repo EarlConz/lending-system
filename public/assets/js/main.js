@@ -472,6 +472,57 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initLoanApplicationGate();
 
+  const initCacobemModal = () => {
+    const modalRoot = document.querySelector("[data-cacobem-modal]");
+    if (!modalRoot) {
+      return;
+    }
+
+    const overlay = modalRoot.querySelector("[data-cacobem-overlay]");
+    const closeButtons = modalRoot.querySelectorAll("[data-cacobem-close]");
+    const openButtons = document.querySelectorAll("[data-cacobem-open]");
+
+    const openModal = () => {
+      modalRoot.classList.remove("tw-hidden");
+      modalRoot.style.display = "block";
+      document.body.style.overflow = "hidden";
+    };
+
+    const closeModal = () => {
+      modalRoot.classList.add("tw-hidden");
+      modalRoot.style.display = "none";
+      document.body.style.overflow = "";
+    };
+
+    openButtons.forEach((button) => {
+      button.addEventListener("click", openModal);
+    });
+
+    closeButtons.forEach((button) => {
+      button.addEventListener("click", closeModal);
+    });
+
+    if (overlay) {
+      overlay.addEventListener("click", closeModal);
+    }
+
+    if (modalRoot.dataset.openModal === "1") {
+      openModal();
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeModal();
+      }
+    });
+  };
+
+  initCacobemModal();
+
+  document.querySelectorAll("[data-print]").forEach((button) => {
+    button.addEventListener("click", () => window.print());
+  });
+
   const modalRoot = document.querySelector("[data-modal-root]");
   if (modalRoot) {
     const overlay = modalRoot.querySelector("[data-modal-overlay]");

@@ -836,3 +836,211 @@ select {
     animation: none;
   }
 }
+
+.cacobem-doc {
+  font-family: "Times New Roman", serif;
+  color: #111;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.cacobem-page {
+  padding: 18px 10px;
+  border: 1px solid #d7d7d7;
+  background: #fff;
+  margin-bottom: 20px;
+}
+
+.cacobem-title {
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.cacobem-title.small {
+  font-size: 13px;
+}
+
+.cacobem-section {
+  margin-top: 16px;
+}
+
+.cacobem-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.cacobem-grid {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.cacobem-grid.cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cacobem-grid.cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cacobem-grid.cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.cacobem-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cacobem-label {
+  font-size: 12px;
+}
+
+.cacobem-input,
+.cacobem-doc input[type="text"],
+.cacobem-doc input[type="date"],
+.cacobem-doc textarea {
+  border: none;
+  border-bottom: 1px solid #111;
+  background: transparent;
+  padding: 2px 4px;
+  font-family: "Times New Roman", serif;
+  font-size: 14px;
+  width: 100%;
+}
+
+.cacobem-input.small {
+  max-width: 140px;
+}
+
+.cacobem-input.wide {
+  min-width: 280px;
+  flex: 1;
+}
+
+.cacobem-input-date {
+  max-width: 180px;
+}
+
+.cacobem-static {
+  padding: 2px 4px;
+  border-bottom: 1px solid #111;
+}
+
+.cacobem-inline {
+  display: inline-flex;
+  gap: 12px;
+  align-items: center;
+  margin: 0 6px;
+}
+
+.cacobem-doc input[type="radio"] {
+  margin-right: 4px;
+}
+
+.cacobem-signatures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 12px 0;
+}
+
+.cacobem-sign-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cacobem-sign-label {
+  font-size: 11px;
+  text-align: center;
+}
+
+.cacobem-authorization {
+  border: 1px solid #111;
+  padding: 10px;
+  margin-top: 16px;
+}
+
+.cacobem-authorization.duplicate {
+  margin-top: 12px;
+  opacity: 0.95;
+}
+
+.cacobem-muted {
+  font-size: 11px;
+  color: #444;
+}
+
+.cacobem-value {
+  padding: 0 6px;
+  border-bottom: 1px solid #111;
+  min-width: 80px;
+  display: inline-block;
+}
+
+.cacobem-approval {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.cacobem-approval-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.cacobem-approval-name {
+  font-weight: 600;
+}
+
+.cacobem-approval-role {
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.cacobem-card {
+  background: #fff;
+}
+
+.print-hidden {
+  display: block;
+}
+
+@media print {
+  .sidebar,
+  .topbar,
+  .hero,
+  .stats,
+  .btn,
+  .print-hidden {
+    display: none !important;
+  }
+
+  .main.page {
+    padding: 0;
+    margin: 0;
+  }
+
+  .cacobem-page {
+    border: none;
+    margin: 0 0 16px;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .card.cacobem-card {
+    box-shadow: none;
+    border: none;
+    padding: 0;
+  }
+}

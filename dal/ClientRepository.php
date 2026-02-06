@@ -80,6 +80,33 @@ class ClientRepository extends BaseRepository
     return $clients;
   }
 
+  public function getClientsForPicklist(): array
+  {
+    $rows = $this->fetchAll(
+      SqlQueries::get("client.picklist")
+    );
+
+    $clients = [];
+    foreach ($rows as $row) {
+      $nameParts = array_filter([
+        $row["last_name"] ?? "",
+        $row["first_name"] ?? "",
+      ]);
+      $name = trim(implode(", ", $nameParts));
+      if (!empty($row["middle_name"])) {
+        $name .= " " . $row["middle_name"];
+      }
+
+      $clients[] = [
+        "borrower_id" => (string) ($row["borrower_id"] ?? ""),
+        "name" => $name,
+        "phone" => (string) ($row["phone_primary"] ?? ""),
+      ];
+    }
+
+    return $clients;
+  }
+
   public function getBeneficiariesForClient(?int $clientId): array
   {
     if ($clientId === null) {

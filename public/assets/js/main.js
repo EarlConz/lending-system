@@ -184,6 +184,294 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleUsedPanels();
   }
 
+  const initTabs = (scope) => {
+    if (!scope) {
+      return;
+    }
+
+    const tabGroup = scope.querySelector("[data-tab-group]");
+    if (!tabGroup) {
+      return;
+    }
+
+    const tabButtons = tabGroup.querySelectorAll("[data-tab-target]");
+    const panels = scope.querySelectorAll("[data-tab-panel]");
+
+    if (!tabButtons.length || !panels.length) {
+      return;
+    }
+
+    const setActiveTab = (target) => {
+      tabButtons.forEach((button) => {
+        const isActive = button.dataset.tabTarget === target;
+        button.classList.toggle("tw-bg-accent-3", isActive);
+        button.classList.toggle("tw-bg-surface-2", !isActive);
+        button.classList.toggle("tw-text-ink", isActive);
+        button.classList.toggle("tw-text-muted", !isActive);
+      });
+
+      panels.forEach((panel) => {
+        panel.style.display =
+          panel.dataset.tabPanel === target ? "" : "none";
+      });
+    };
+
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        setActiveTab(button.dataset.tabTarget);
+      });
+    });
+
+    const initialTab = tabButtons[0]?.dataset.tabTarget;
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  };
+
+  document
+    .querySelectorAll("[data-tab-scope]")
+    .forEach((scope) => initTabs(scope));
+
+  const initLoanApplicationGate = () => {
+    const gate = document.querySelector("[data-loan-application-gate]");
+    const picker = document.querySelector("[data-client-picker-input]");
+    if (!gate || !picker) {
+      return;
+    }
+
+    const listId = picker.getAttribute("list");
+    const list = listId ? document.getElementById(listId) : null;
+    const form = document.getElementById("loan-application-form");
+    if (!list || !form) {
+      return;
+    }
+
+    const modalRoot = document.querySelector("[data-loan-application-modal]");
+    const openButton = document.querySelector("[data-loan-application-open]");
+    const borrowerField = form.querySelector("[data-borrower-id-field]");
+    const nameField = form.querySelector("[data-client-name-field]");
+    const phoneField = form.querySelector("[data-client-phone-field]");
+    const actionButtons = document.querySelectorAll(
+      "[data-loan-application-action]",
+    );
+
+    let toastRoot = document.querySelector(".toast-root");
+    if (!toastRoot) {
+      toastRoot = document.createElement("div");
+      toastRoot.className = "toast-root";
+      document.body.appendChild(toastRoot);
+    }
+
+    const showToast = (message) => {
+      if (!message) {
+        return;
+      }
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.textContent = message;
+      toastRoot.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.add("is-visible");
+      });
+      setTimeout(() => {
+        toast.classList.remove("is-visible");
+        toast.addEventListener("transitionend", () => toast.remove(), {
+          once: true,
+        });
+      }, 2800);
+    };
+
+    const openLoanModal = () => {
+      if (!modalRoot) {
+        return;
+      }
+      modalRoot.classList.remove("tw-hidden");
+      modalRoot.style.display = "block";
+      document.body.style.overflow = "hidden";
+    };
+
+    const closeLoanModal = () => {
+      if (!modalRoot) {
+        return;
+      }
+      modalRoot.classList.add("tw-hidden");
+      modalRoot.style.display = "none";
+      document.body.style.overflow = "";
+      const url = new URL(window.location.href);
+      url.searchParams.delete("mode");
+      url.searchParams.delete("id");
+      window.history.replaceState({}, "", url.toString());
+    };
+
+    const isLoanModalOpen = () => {
+      if (!modalRoot) {
+        return false;
+      }
+      return !modalRoot.classList.contains("tw-hidden");
+    };
+
+    const lockGate = () => {
+      gate.classList.add("loan-application-locked");
+      gate.classList.remove("loan-application-ready");
+      gate.dataset.clientSelected = "0";
+      actionButtons.forEach((button) => {
+        button.disabled = true;
+      });
+    };
+
+    const unlockGate = () => {
+      gate.classList.remove("loan-application-locked");
+      gate.dataset.clientSelected = "1";
+      actionButtons.forEach((button) => {
+        button.disabled = false;
+      });
+    };
+
+    const triggerPopIn = () => {
+      gate.classList.remove("loan-application-ready");
+      // Force reflow to restart animation.
+      void gate.offsetWidth;
+      gate.classList.add("loan-application-ready");
+    };
+
+    const resetLoanForm = () => {
+      const fields = form.querySelectorAll("input, select, textarea");
+      fields.forEach((field) => {
+        const name = field.getAttribute("name") || "";
+        if (name === "csrf_token" || name === "action") {
+          return;
+        }
+
+        if (field.type === "checkbox" || field.type === "radio") {
+          field.checked = false;
+          return;
+        }
+
+        if (field.tagName === "SELECT") {
+          field.selectedIndex = 0;
+          return;
+        }
+
+        if (field.type === "file") {
+          field.value = "";
+          return;
+        }
+
+        field.value = "";
+      });
+    };
+
+    let currentBorrowerId =
+      gate.dataset.selectedBorrowerId ||
+      borrowerField?.value?.trim() ||
+      "";
+    let lastCommittedBorrowerId = currentBorrowerId;
+
+    if (gate.dataset.clientSelected === "1" && currentBorrowerId) {
+      unlockGate();
+    } else {
+      lockGate();
+      currentBorrowerId = "";
+      gate.dataset.selectedBorrowerId = "";
+    }
+
+    const clearSelection = () => {
+      if (currentBorrowerId) {
+        resetLoanForm();
+      }
+      currentBorrowerId = "";
+      gate.dataset.selectedBorrowerId = "";
+      if (borrowerField) {
+        borrowerField.value = "";
+      }
+      if (nameField) {
+        nameField.value = "";
+      }
+      if (phoneField) {
+        phoneField.value = "";
+      }
+      lockGate();
+      closeLoanModal();
+    };
+
+    const applySelection = (option) => {
+      const borrowerId = option.dataset.borrowerId || "";
+      const name = option.dataset.name || "";
+      const phone = option.dataset.phone || "";
+
+      if (!borrowerId) {
+        clearSelection();
+        return;
+      }
+
+      if (currentBorrowerId === borrowerId) {
+        if (!isLoanModalOpen()) {
+          openLoanModal();
+        }
+        return;
+      }
+
+      const isChange =
+        lastCommittedBorrowerId && borrowerId !== lastCommittedBorrowerId;
+
+      if (isChange) {
+        resetLoanForm();
+        showToast("Client changed, form reset.");
+      } else {
+        showToast(name ? `Client selected: ${name}` : "Client selected.");
+      }
+
+      currentBorrowerId = borrowerId;
+      lastCommittedBorrowerId = borrowerId;
+      gate.dataset.selectedBorrowerId = borrowerId;
+
+      if (borrowerField) {
+        borrowerField.value = borrowerId;
+      }
+      if (nameField) {
+        nameField.value = name;
+      }
+      if (phoneField) {
+        phoneField.value = phone;
+      }
+
+      unlockGate();
+      triggerPopIn();
+      openLoanModal();
+    };
+
+    const handlePickerChange = () => {
+      const value = picker.value.trim();
+      if (!value) {
+        clearSelection();
+        return;
+      }
+
+      const match = Array.from(list.options).find(
+        (option) => option.value === value,
+      );
+
+      if (!match) {
+        clearSelection();
+        return;
+      }
+
+      applySelection(match);
+    };
+
+    picker.addEventListener("input", handlePickerChange);
+    picker.addEventListener("change", handlePickerChange);
+    if (openButton) {
+      openButton.addEventListener("click", () => {
+        if (currentBorrowerId) {
+          openLoanModal();
+        }
+      });
+    }
+  };
+
+  initLoanApplicationGate();
+
   const modalRoot = document.querySelector("[data-modal-root]");
   if (modalRoot) {
     const overlay = modalRoot.querySelector("[data-modal-overlay]");
@@ -223,35 +511,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    const tabGroup = modalRoot.querySelector("[data-tab-group]");
-    if (tabGroup) {
-      const tabButtons = tabGroup.querySelectorAll("[data-tab-target]");
-      const panels = modalRoot.querySelectorAll("[data-tab-panel]");
-
-      const setActiveTab = (target) => {
-        tabButtons.forEach((button) => {
-          const isActive = button.dataset.tabTarget === target;
-          button.classList.toggle("tw-bg-sky-200", isActive);
-          button.classList.toggle("tw-bg-sky-100", !isActive);
-        });
-
-        panels.forEach((panel) => {
-          panel.style.display =
-            panel.dataset.tabPanel === target ? "" : "none";
-        });
-      };
-
-      tabButtons.forEach((button) => {
-        button.addEventListener("click", () => {
-          setActiveTab(button.dataset.tabTarget);
-        });
-      });
-
-      const initialTab = tabButtons[0]?.dataset.tabTarget;
-      if (initialTab) {
-        setActiveTab(initialTab);
-      }
-    }
+    initTabs(modalRoot);
   }
 
   const statusFilter = document.querySelector("[data-status-filter]");

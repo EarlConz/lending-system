@@ -52,6 +52,12 @@ ORDER BY
   created_at DESC
 LIMIT %d
 SQL,
+    "client.picklist" => <<<'SQL'
+SELECT borrower_id, first_name, middle_name, last_name, phone_primary
+FROM clients
+WHERE borrower_id IS NOT NULL AND borrower_id <> ''
+ORDER BY last_name ASC, first_name ASC, middle_name ASC
+SQL,
     "client.beneficiaries" => <<<'SQL'
 SELECT id, relation, first_name, middle_name, last_name, birthdate, gender
 FROM client_beneficiaries
@@ -278,24 +284,74 @@ SQL,
 INSERT INTO loan_applications (
   application_id,
   client_id,
+  product_id,
   requested_amount,
   monthly_income,
   employment_info,
   terms_months,
+  term_unit,
+  term_fixed,
+  savings_account,
   collateral,
   guarantor,
+  interest_rate,
+  interest_type,
+  equal_principal,
+  release_date,
+  maturity_date,
+  deduction_interest,
+  deduction_service_charge,
+  deduction_climbs,
+  deduction_notarial_fee,
+  total_deductions,
+  net_proceeds,
+  amortization_days,
+  principal_interval,
+  interval_adjustment,
+  fixed_amortization,
+  irregular_amortization,
+  insurance_amount,
+  insurance_basis,
+  interest_amortized,
+  service_charge_amortized,
+  client_photo_path,
   status,
   priority,
   submitted_date
 ) VALUES (
   :application_id,
   :client_id,
+  :product_id,
   :requested_amount,
   :monthly_income,
   :employment_info,
   :terms_months,
+  :term_unit,
+  :term_fixed,
+  :savings_account,
   :collateral,
   :guarantor,
+  :interest_rate,
+  :interest_type,
+  :equal_principal,
+  :release_date,
+  :maturity_date,
+  :deduction_interest,
+  :deduction_service_charge,
+  :deduction_climbs,
+  :deduction_notarial_fee,
+  :total_deductions,
+  :net_proceeds,
+  :amortization_days,
+  :principal_interval,
+  :interval_adjustment,
+  :fixed_amortization,
+  :irregular_amortization,
+  :insurance_amount,
+  :insurance_basis,
+  :interest_amortized,
+  :service_charge_amortized,
+  :client_photo_path,
   :status,
   :priority,
   :submitted_date
@@ -307,6 +363,27 @@ SELECT MAX(CAST(SUBSTRING(application_id, 5) AS UNSIGNED)) AS max_id
 FROM loan_applications
 WHERE application_id LIKE 'APP-%'
 SQL,
+    "loan.application_schedule_insert" => <<<'SQL'
+INSERT INTO loan_application_schedules (
+  loan_application_id,
+  installment_no,
+  due_date,
+  principal,
+  interest,
+  total,
+  balance
+) VALUES (
+  :loan_application_id,
+  :installment_no,
+  :due_date,
+  :principal,
+  :interest,
+  :total,
+  :balance
+)
+SQL,
+    "loan.application_schedule_delete_by_application" =>
+      "DELETE FROM loan_application_schedules WHERE loan_application_id = :loan_application_id",
     "loan.insert" => <<<'SQL'
 INSERT INTO loans (
   loan_id,

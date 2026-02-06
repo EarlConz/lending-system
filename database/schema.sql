@@ -113,12 +113,37 @@ CREATE TABLE loan_applications (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   application_id VARCHAR(30) NOT NULL UNIQUE,
   client_id INT UNSIGNED NOT NULL,
+  product_id INT UNSIGNED NULL,
   requested_amount DECIMAL(12,2) NOT NULL,
   monthly_income DECIMAL(12,2) NULL,
   employment_info VARCHAR(160) NULL,
   terms_months INT UNSIGNED NULL,
+  term_unit VARCHAR(30) NULL,
+  term_fixed TINYINT(1) NOT NULL DEFAULT 0,
+  savings_account VARCHAR(60) NULL,
   collateral VARCHAR(120) NULL,
   guarantor VARCHAR(120) NULL,
+  interest_rate DECIMAL(6,3) NULL,
+  interest_type VARCHAR(40) NULL,
+  equal_principal TINYINT(1) NOT NULL DEFAULT 0,
+  release_date DATE NULL,
+  maturity_date DATE NULL,
+  deduction_interest DECIMAL(12,2) NULL,
+  deduction_service_charge DECIMAL(12,2) NULL,
+  deduction_climbs DECIMAL(12,2) NULL,
+  deduction_notarial_fee DECIMAL(12,2) NULL,
+  total_deductions DECIMAL(12,2) NULL,
+  net_proceeds DECIMAL(12,2) NULL,
+  amortization_days VARCHAR(40) NULL,
+  principal_interval VARCHAR(40) NULL,
+  interval_adjustment VARCHAR(40) NULL,
+  fixed_amortization DECIMAL(12,2) NULL,
+  irregular_amortization DECIMAL(12,2) NULL,
+  insurance_amount DECIMAL(12,2) NULL,
+  insurance_basis VARCHAR(40) NULL,
+  interest_amortized VARCHAR(20) NULL,
+  service_charge_amortized VARCHAR(20) NULL,
+  client_photo_path VARCHAR(255) NULL,
   status ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Pending',
   priority ENUM('Normal', 'Medium', 'High') NOT NULL DEFAULT 'Normal',
   submitted_date DATE NOT NULL,
@@ -126,6 +151,26 @@ CREATE TABLE loan_applications (
   PRIMARY KEY (id),
   CONSTRAINT fk_applications_client
     FOREIGN KEY (client_id) REFERENCES clients(id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT fk_applications_product
+    FOREIGN KEY (product_id) REFERENCES loan_products(id)
+    ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Loan Application Schedules
+CREATE TABLE loan_application_schedules (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  loan_application_id INT UNSIGNED NOT NULL,
+  installment_no INT UNSIGNED NOT NULL,
+  due_date DATE NOT NULL,
+  principal DECIMAL(12,2) NOT NULL,
+  interest DECIMAL(12,2) NOT NULL,
+  total DECIMAL(12,2) NOT NULL,
+  balance DECIMAL(12,2) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT fk_application_schedules_application
+    FOREIGN KEY (loan_application_id) REFERENCES loan_applications(id)
     ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB;
 

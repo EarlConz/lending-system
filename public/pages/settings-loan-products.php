@@ -557,11 +557,11 @@
       </div>
       <div class="tw-px-6 tw-pt-4">
         <div class="tw-flex tw-gap-2 tw-text-sm tw-font-semibold" data-tab-group="loan-product">
-          <button type="button" class="tw-rounded-full tw-bg-sky-200 tw-px-4 tw-py-2" data-tab-target="general">General</button>
-          <button type="button" class="tw-rounded-full tw-bg-sky-100 tw-px-4 tw-py-2" data-tab-target="rates">Rates / Limits</button>
-          <button type="button" class="tw-rounded-full tw-bg-sky-100 tw-px-4 tw-py-2" data-tab-target="deductions">Deductions</button>
-          <button type="button" class="tw-rounded-full tw-bg-sky-100 tw-px-4 tw-py-2" data-tab-target="amortization">Amortization</button>
-          <button type="button" class="tw-rounded-full tw-bg-sky-100 tw-px-4 tw-py-2" data-tab-target="others">Others</button>
+          <button type="button" class="tw-rounded-full tw-bg-accent-3 tw-px-4 tw-py-2 tw-text-ink" data-tab-target="general">General</button>
+          <button type="button" class="tw-rounded-full tw-bg-surface-2 tw-px-4 tw-py-2 tw-text-muted" data-tab-target="rates">Rates / Limits</button>
+          <button type="button" class="tw-rounded-full tw-bg-surface-2 tw-px-4 tw-py-2 tw-text-muted" data-tab-target="deductions">Deductions</button>
+          <button type="button" class="tw-rounded-full tw-bg-surface-2 tw-px-4 tw-py-2 tw-text-muted" data-tab-target="amortization">Amortization</button>
+          <button type="button" class="tw-rounded-full tw-bg-surface-2 tw-px-4 tw-py-2 tw-text-muted" data-tab-target="others">Others</button>
         </div>
       </div>
       <div class="tw-px-6 tw-pb-6">

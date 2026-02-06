@@ -132,24 +132,77 @@ class LoanRepository extends BaseRepository
 
   public function createLoanApplication(array $data): int
   {
-    $this->execute(
-      SqlQueries::get("loan.application_insert"),
-      [
-        ":application_id" => $data["application_id"],
-        ":client_id" => $data["client_id"],
-        ":requested_amount" => $data["requested_amount"],
-        ":monthly_income" => $data["monthly_income"],
-        ":employment_info" => $data["employment_info"],
-        ":terms_months" => $data["terms_months"],
-        ":collateral" => $data["collateral"],
-        ":guarantor" => $data["guarantor"],
-        ":status" => $data["status"],
-        ":priority" => $data["priority"],
-        ":submitted_date" => $data["submitted_date"],
-      ]
-    );
+    $schedules = $data["schedules"] ?? [];
 
-    return (int) $this->db()->lastInsertId();
+    return (int) $this->withTransaction(function () use ($data, $schedules) {
+      $this->execute(
+        SqlQueries::get("loan.application_insert"),
+        [
+          ":application_id" => $data["application_id"],
+          ":client_id" => $data["client_id"],
+          ":product_id" => $data["product_id"],
+          ":requested_amount" => $data["requested_amount"],
+          ":monthly_income" => $data["monthly_income"],
+          ":employment_info" => $data["employment_info"],
+          ":terms_months" => $data["terms_months"],
+          ":term_unit" => $data["term_unit"],
+          ":term_fixed" => $data["term_fixed"],
+          ":savings_account" => $data["savings_account"],
+          ":collateral" => $data["collateral"],
+          ":guarantor" => $data["guarantor"],
+          ":interest_rate" => $data["interest_rate"],
+          ":interest_type" => $data["interest_type"],
+          ":equal_principal" => $data["equal_principal"],
+          ":release_date" => $data["release_date"],
+          ":maturity_date" => $data["maturity_date"],
+          ":deduction_interest" => $data["deduction_interest"],
+          ":deduction_service_charge" => $data["deduction_service_charge"],
+          ":deduction_climbs" => $data["deduction_climbs"],
+          ":deduction_notarial_fee" => $data["deduction_notarial_fee"],
+          ":total_deductions" => $data["total_deductions"],
+          ":net_proceeds" => $data["net_proceeds"],
+          ":amortization_days" => $data["amortization_days"],
+          ":principal_interval" => $data["principal_interval"],
+          ":interval_adjustment" => $data["interval_adjustment"],
+          ":fixed_amortization" => $data["fixed_amortization"],
+          ":irregular_amortization" => $data["irregular_amortization"],
+          ":insurance_amount" => $data["insurance_amount"],
+          ":insurance_basis" => $data["insurance_basis"],
+          ":interest_amortized" => $data["interest_amortized"],
+          ":service_charge_amortized" => $data["service_charge_amortized"],
+          ":client_photo_path" => $data["client_photo_path"],
+          ":status" => $data["status"],
+          ":priority" => $data["priority"],
+          ":submitted_date" => $data["submitted_date"],
+        ]
+      );
+
+      $applicationId = (int) $this->db()->lastInsertId();
+
+      if (!empty($schedules)) {
+        $this->createLoanApplicationSchedules($applicationId, $schedules);
+      }
+
+      return $applicationId;
+    });
+  }
+
+  public function createLoanApplicationSchedules(int $applicationId, array $schedules): void
+  {
+    foreach ($schedules as $schedule) {
+      $this->execute(
+        SqlQueries::get("loan.application_schedule_insert"),
+        [
+          ":loan_application_id" => $applicationId,
+          ":installment_no" => $schedule["installment_no"],
+          ":due_date" => $schedule["due_date"],
+          ":principal" => $schedule["principal"],
+          ":interest" => $schedule["interest"],
+          ":total" => $schedule["total"],
+          ":balance" => $schedule["balance"],
+        ]
+      );
+    }
   }
 
   public function updateLoanApplication(int $applicationId, array $data): bool

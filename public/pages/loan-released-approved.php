@@ -11,8 +11,7 @@
   $success = isset($_GET["released"]);
   $releaseStats = $loanRepo->getReleaseStats();
   $approvedLoans = $loanRepo->getApprovedUnreleasedLoans();
-  $approvedApplications = $loanRepo->getApprovedApplications();
-  $approvedCombined = array_merge($approvedLoans, $approvedApplications);
+  $approvedCombined = $approvedLoans;
   usort($approvedCombined, static function (array $left, array $right): int {
     $leftDate = $left["approval_date"] ?? "";
     $rightDate = $right["approval_date"] ?? "";

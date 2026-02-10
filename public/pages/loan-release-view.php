@@ -26,6 +26,7 @@
     <?php else : ?>
       <?php
         $borrower = trim(($release["first_name"] ?? "") . " " . ($release["last_name"] ?? ""));
+        $term = $release["term_months"] ? $release["term_months"] . " months" : "";
       ?>
       <div class="table-wrap">
         <table class="data-table">
@@ -41,6 +42,34 @@
             <tr>
               <th>Borrower</th>
               <td><?php echo htmlspecialchars($borrower); ?></td>
+            </tr>
+            <tr>
+              <th>Borrower ID</th>
+              <td><?php echo htmlspecialchars((string) ($release["borrower_id"] ?? "")); ?></td>
+            </tr>
+            <tr>
+              <th>Contact Number</th>
+              <td><?php echo htmlspecialchars((string) ($release["phone_primary"] ?? "")); ?></td>
+            </tr>
+            <tr>
+              <th>Product</th>
+              <td><?php echo htmlspecialchars((string) ($release["product_name"] ?? "")); ?></td>
+            </tr>
+            <tr>
+              <th>Loan Amount</th>
+              <td><?php echo htmlspecialchars((string) ($release["loan_amount"] ?? "")); ?></td>
+            </tr>
+            <tr>
+              <th>Loan Term</th>
+              <td><?php echo htmlspecialchars((string) $term); ?></td>
+            </tr>
+            <tr>
+              <th>Approval Date</th>
+              <td><?php echo htmlspecialchars((string) ($release["approval_date"] ?? "")); ?></td>
+            </tr>
+            <tr>
+              <th>Loan Status</th>
+              <td><?php echo htmlspecialchars((string) ($release["loan_status"] ?? "")); ?></td>
             </tr>
             <tr>
               <th>Amount</th>

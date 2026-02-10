@@ -40,6 +40,14 @@
               <td><?php echo htmlspecialchars($borrower); ?></td>
             </tr>
             <tr>
+              <th>Borrower ID</th>
+              <td><?php echo htmlspecialchars((string) ($loan["borrower_id"] ?? "")); ?></td>
+            </tr>
+            <tr>
+              <th>Contact Number</th>
+              <td><?php echo htmlspecialchars((string) ($loan["phone_primary"] ?? "")); ?></td>
+            </tr>
+            <tr>
               <th>Product</th>
               <td><?php echo htmlspecialchars((string) ($loan["product_name"] ?? "")); ?></td>
             </tr>

@@ -200,7 +200,7 @@
   };
 
   $allowedTermUnits = ["Days", "Weeks", "Months", "Semi-Months"];
-  $allowedInterestTypes = ["Diminishing", "Flat"];
+  $allowedInterestTypes = ["Diminishing", "Discounted"];
   $allowedUsedOptions = ["Not Used", "Used"];
   $allowedInsuranceBasis = ["Fixed Amount", "Percent"];
   $allowedAmortizationDays = [
@@ -288,12 +288,42 @@
       }
 
       $interestRate = $normalizeNumber($formValues["interest_rate"], "Interest rate");
+      if ($formValues["interest_type"] === "Flat") {
+        $formValues["interest_type"] = "Discounted";
+      }
       $interestType = in_array($formValues["interest_type"], $allowedInterestTypes, true)
         ? $formValues["interest_type"]
         : null;
 
       $releaseDate = $normalizeDate($formValues["release_date"], "Release date");
+      if ($releaseDate === null) {
+        $releaseDate = date("Y-m-d");
+        $formValues["release_date"] = $releaseDate;
+      }
+
       $maturityDate = $normalizeDate($formValues["maturity_date"], "Maturity date");
+      if ($releaseDate !== null && $termUnit !== null && $termsMonths !== null) {
+        $releaseDateObj = DateTime::createFromFormat("Y-m-d", $releaseDate);
+        if ($releaseDateObj) {
+          $maturityDateObj = clone $releaseDateObj;
+          switch ($termUnit) {
+            case "Days":
+              $maturityDateObj->modify("+" . $termsMonths . " days");
+              break;
+            case "Weeks":
+              $maturityDateObj->modify("+" . ($termsMonths * 7) . " days");
+              break;
+            case "Semi-Months":
+              $maturityDateObj->modify("+" . ($termsMonths * 15) . " days");
+              break;
+            case "Months":
+              $maturityDateObj->modify("+" . $termsMonths . " months");
+              break;
+          }
+          $maturityDate = $maturityDateObj->format("Y-m-d");
+          $formValues["maturity_date"] = $maturityDate;
+        }
+      }
 
       $deductionInterest = $normalizeNumber($formValues["deduction_interest"], "Deduction interest");
       $deductionServiceCharge = $normalizeNumber($formValues["deduction_service_charge"], "Service charge deduction");
@@ -301,6 +331,91 @@
       $deductionNotarialFee = $normalizeNumber($formValues["deduction_notarial_fee"], "Notarial fee");
       $totalDeductions = $normalizeNumber($formValues["total_deductions"], "Total deductions");
       $netProceeds = $normalizeNumber($formValues["net_proceeds"], "Net proceeds");
+
+      $parseRate = static function ($value): ?float {
+        $value = trim((string) $value);
+        if ($value === "") {
+          return null;
+        }
+        $normalized = str_replace([",", " "], "", $value);
+        return is_numeric($normalized) ? (float) $normalized : null;
+      };
+
+      $formatMoney = static function (float $value): string {
+        return number_format($value, 2, ".", "");
+      };
+
+      $termDays = null;
+      if ($termsMonths !== null && $termUnit !== null) {
+        switch ($termUnit) {
+          case "Days":
+            $termDays = (float) $termsMonths;
+            break;
+          case "Weeks":
+            $termDays = (float) ($termsMonths * 7);
+            break;
+          case "Semi-Months":
+            $termDays = (float) ($termsMonths * 15);
+            break;
+          case "Months":
+            $termDays = (float) ($termsMonths * 30);
+            break;
+        }
+      }
+
+      $serviceChargeAmount = null;
+      if ($productId !== null) {
+        $productKey = (string) $productId;
+        $product = $loanProductLookup[$productKey] ?? null;
+        if (is_array($product)) {
+          $serviceChargeAmount = $parseRate($product["service_charge"] ?? "");
+        }
+      }
+
+      $deductionInterestValue = null;
+      if ($interestType === "Diminishing") {
+        $deductionInterest = $formatMoney(0.0);
+      } elseif ($requestedAmount !== null && $interestRate !== null && $termDays !== null) {
+        $deductionInterestValue =
+          ((float) $requestedAmount * $termDays * ((float) $interestRate / 100)) / 360;
+        $deductionInterest = $formatMoney($deductionInterestValue);
+      } else {
+        $deductionInterest = null;
+      }
+
+      if ($serviceChargeAmount !== null) {
+        $deductionServiceCharge = $formatMoney((float) $serviceChargeAmount);
+      } else {
+        $deductionServiceCharge = null;
+      }
+
+      $deductionValues = [
+        $deductionInterest !== null ? (float) $deductionInterest : null,
+        $deductionServiceCharge !== null ? (float) $deductionServiceCharge : null,
+        $deductionClimbs !== null ? (float) $deductionClimbs : null,
+        $deductionNotarialFee !== null ? (float) $deductionNotarialFee : null,
+      ];
+
+      $hasAnyDeduction = false;
+      $deductionTotalValue = 0.0;
+      foreach ($deductionValues as $value) {
+        if ($value !== null) {
+          $hasAnyDeduction = true;
+          $deductionTotalValue += $value;
+        }
+      }
+
+      if ($hasAnyDeduction) {
+        $totalDeductions = $formatMoney($deductionTotalValue);
+      } else {
+        $totalDeductions = $requestedAmount !== null ? $formatMoney(0.0) : null;
+      }
+
+      if ($requestedAmount !== null && $totalDeductions !== null) {
+        $netProceeds = $formatMoney((float) $requestedAmount - (float) $totalDeductions);
+      } else {
+        $netProceeds = null;
+      }
 
       $amortizationDays = in_array($formValues["amortization_days"], $allowedAmortizationDays, true)
         ? $formValues["amortization_days"]
@@ -763,11 +878,11 @@
                 <div class="tw-mt-3 tw-grid tw-gap-4 tw-md:grid-cols-2">
                   <div>
                     <label>Interest</label>
-                    <input type="text" name="deduction_interest" value="<?php echo htmlspecialchars($formValues["deduction_interest"]); ?>" data-loan-interest-deduction-field />
+                    <input type="text" name="deduction_interest" value="<?php echo htmlspecialchars($formValues["deduction_interest"]); ?>" data-loan-interest-deduction-field readonly />
                   </div>
                   <div>
                     <label>Service Charge</label>
-                    <input type="text" name="deduction_service_charge" value="<?php echo htmlspecialchars($formValues["deduction_service_charge"]); ?>" data-loan-service-charge-field />
+                    <input type="text" name="deduction_service_charge" value="<?php echo htmlspecialchars($formValues["deduction_service_charge"]); ?>" data-loan-service-charge-field readonly />
                   </div>
                   <div>
                     <label>Climbs (PHP)</label>
@@ -779,11 +894,11 @@
                   </div>
                   <div>
                     <label>Total Deductions</label>
-                    <input type="text" name="total_deductions" value="<?php echo htmlspecialchars($formValues["total_deductions"]); ?>" />
+                    <input type="text" name="total_deductions" value="<?php echo htmlspecialchars($formValues["total_deductions"]); ?>" readonly />
                   </div>
                   <div>
                     <label>Net Proceeds</label>
-                    <input type="text" name="net_proceeds" value="<?php echo htmlspecialchars($formValues["net_proceeds"]); ?>" />
+                    <input type="text" name="net_proceeds" value="<?php echo htmlspecialchars($formValues["net_proceeds"]); ?>" readonly />
                   </div>
                 </div>
               </div>

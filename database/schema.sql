@@ -223,7 +223,7 @@ CREATE TABLE client_beneficiaries (
     sms_language VARCHAR(120) NOT NULL DEFAULT 'Not Used',
     sms_free VARCHAR(120) NOT NULL DEFAULT 'Not Used',
     sms_show_unpaid_amorts TINYINT(1) NOT NULL DEFAULT 0,
-    service_charge DECIMAL(8,4) NOT NULL DEFAULT 0.0000,
+    service_charge DECIMAL(12,2) NOT NULL DEFAULT 0.00,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
   ) ENGINE=InnoDB;

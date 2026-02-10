@@ -63,6 +63,7 @@
     "interest_computation_flexible" => 0,
     "interest_rate_minimum" => "0.00",
     "days_in_year" => "360",
+    "service_charge" => "0.00",
     "penalty_per_amort_fixed_rate" => "",
     "penalty_per_amort_fixed_amount" => "",
     "penalty_per_amort_running_rate" => "",
@@ -286,6 +287,7 @@
         "interest_computation_flexible" => isset($_POST["interest_computation_flexible"]) ? 1 : 0,
         "interest_rate_minimum" => trim((string) ($_POST["interest_rate_minimum"] ?? "0.00")),
         "days_in_year" => trim((string) ($_POST["days_in_year"] ?? "360")),
+        "service_charge" => trim((string) ($_POST["service_charge"] ?? "0.00")),
         "penalty_per_amort_fixed_rate" => trim((string) ($_POST["penalty_per_amort_fixed_rate"] ?? "")),
         "penalty_per_amort_fixed_amount" => trim((string) ($_POST["penalty_per_amort_fixed_amount"] ?? "")),
         "penalty_per_amort_running_rate" => trim((string) ($_POST["penalty_per_amort_running_rate"] ?? "")),
@@ -545,7 +547,7 @@
         "sms_language" => $formValues["sms_language"],
         "sms_free" => $formValues["sms_free"],
         "sms_show_unpaid_amorts" => $formValues["sms_show_unpaid_amorts"],
-        "service_charge" => "0.00",
+        "service_charge" => $normalizeNumber($formValues["service_charge"], "Service charge") ?? "0.00",
       ];
 
       if (empty($errors)) {
@@ -1075,6 +1077,14 @@
               <option value="Not Used" <?php echo $formValues["service_charge_used"] === "Not Used" ? "selected" : ""; ?>>Not Used</option>
               <option value="Used" <?php echo $formValues["service_charge_used"] === "Used" ? "selected" : ""; ?>>Used</option>
             </select>
+          </div>
+          <div class="used-panel" data-used-panel="service_charge_used" style="grid-column: 1 / -1;">
+            <div class="form-grid">
+              <div>
+                <label>Service Charge Amount (PHP)</label>
+                <input type="text" name="service_charge" value="<?php echo htmlspecialchars((string) $formValues["service_charge"]); ?>" placeholder="0.00" />
+              </div>
+            </div>
           </div>
           <div>
             <label>Savings Discounted</label>

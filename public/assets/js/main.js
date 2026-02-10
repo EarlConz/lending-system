@@ -251,6 +251,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const borrowerField = form.querySelector("[data-borrower-id-field]");
     const nameField = form.querySelector("[data-client-name-field]");
     const phoneField = form.querySelector("[data-client-phone-field]");
+    const productSelect = form.querySelector("[data-loan-product-select]");
+    const termField = form.querySelector("[data-loan-term-field]");
+    const termUnitField = form.querySelector("[data-loan-term-unit-field]");
+    const interestField = form.querySelector("[data-loan-interest-field]");
+    const deductionInterestField = form.querySelector(
+      "[data-loan-interest-deduction-field]",
+    );
+    const serviceChargeField = form.querySelector("[data-loan-service-charge-field]");
+    const notarialField = form.querySelector("[data-loan-notarial-field]");
+    const loanAmountField = form.querySelector("[data-loan-amount-field]");
     const actionButtons = document.querySelectorAll(
       "[data-loan-application-action]",
     );
@@ -332,6 +342,156 @@ document.addEventListener("DOMContentLoaded", () => {
       // Force reflow to restart animation.
       void gate.offsetWidth;
       gate.classList.add("loan-application-ready");
+    };
+
+    let loanProductMap = {};
+    const productDataScript = document.getElementById("loanProductData");
+    if (productDataScript) {
+      try {
+        loanProductMap = JSON.parse(productDataScript.textContent || "{}");
+      } catch (error) {
+        loanProductMap = {};
+      }
+    }
+
+    const parseNumber = (value) => {
+      if (value === null || value === undefined) {
+        return null;
+      }
+      const cleaned = String(value).replace(/[, ]/g, "").trim();
+      if (!cleaned) {
+        return null;
+      }
+      const number = Number.parseFloat(cleaned);
+      return Number.isFinite(number) ? number : null;
+    };
+
+    const formatMoney = (value) => {
+      if (value === null || value === undefined || Number.isNaN(value)) {
+        return "";
+      }
+      return value.toFixed(2);
+    };
+
+    const applyNotarialFee = (product) => {
+      if (!notarialField) {
+        return;
+      }
+
+      if (!product || product.notarial_used !== "Used") {
+        notarialField.value = "";
+        return;
+      }
+
+      const rateValue = parseNumber(product.notarial_rate_value);
+      if (rateValue === null) {
+        notarialField.value = "";
+        return;
+      }
+
+      if (product.notarial_rate_option === "Amount (PHP)") {
+        notarialField.value = formatMoney(rateValue);
+        return;
+      }
+
+      const loanAmount = parseNumber(loanAmountField?.value);
+      if (loanAmount === null) {
+        notarialField.value = "";
+        return;
+      }
+
+      const computed = (loanAmount * rateValue) / 100;
+      notarialField.value = formatMoney(computed);
+    };
+
+    const termToMonths = (termValue, unit) => {
+      if (!termValue || !unit) {
+        return null;
+      }
+
+      const termNumber = parseNumber(termValue);
+      if (termNumber === null) {
+        return null;
+      }
+
+      switch (unit) {
+        case "Months":
+          return termNumber;
+        case "Days":
+          return termNumber / 30;
+        case "Weeks":
+          return termNumber / 4.345;
+        case "Semi-Months":
+          return termNumber / 2;
+        default:
+          return null;
+      }
+    };
+
+    const applyDeductionInterest = (product) => {
+      if (!deductionInterestField) {
+        return;
+      }
+
+      if (!product) {
+        deductionInterestField.value = "";
+        return;
+      }
+
+      const loanAmount = parseNumber(loanAmountField?.value);
+      const interestRate = parseNumber(product.interest_rate);
+      const termMonths = termToMonths(termField?.value, termUnitField?.value);
+
+      if (loanAmount === null || interestRate === null || termMonths === null) {
+        deductionInterestField.value = "";
+        return;
+      }
+
+      const computed = loanAmount * (interestRate / 100) * (termMonths / 12);
+      deductionInterestField.value = formatMoney(computed);
+    };
+
+    const applyProductAutofill = () => {
+      if (!productSelect) {
+        return;
+      }
+
+      const product = loanProductMap[productSelect.value] || null;
+      if (!product) {
+        if (termField) {
+          termField.value = "";
+        }
+        if (termUnitField) {
+          termUnitField.value = "";
+        }
+        if (interestField) {
+          interestField.value = "";
+        }
+        if (deductionInterestField) {
+          deductionInterestField.value = "";
+        }
+        if (serviceChargeField) {
+          serviceChargeField.value = "";
+        }
+        applyNotarialFee(null);
+        return;
+      }
+
+      if (termUnitField && product.term_unit && product.term_unit !== "Not Used") {
+        termUnitField.value = product.term_unit;
+      }
+      if (termField && product.default_term) {
+        termField.value = product.default_term;
+      }
+      if (interestField && product.interest_rate) {
+        interestField.value = product.interest_rate;
+      }
+      if (serviceChargeField) {
+        serviceChargeField.value = product.service_charge || "";
+      }
+
+      applyNotarialFee(product);
+      applyDeductionInterest(product);
     };
 
     const resetLoanForm = () => {
@@ -466,6 +626,39 @@ document.addEventListener("DOMContentLoaded", () => {
         if (currentBorrowerId) {
           openLoanModal();
         }
+      });
+    }
+
+    if (productSelect) {
+      productSelect.addEventListener("change", applyProductAutofill);
+      applyProductAutofill();
+    }
+
+    if (loanAmountField) {
+      loanAmountField.addEventListener("input", () => {
+        const product = productSelect
+          ? loanProductMap[productSelect.value] || null
+          : null;
+        applyNotarialFee(product);
+        applyDeductionInterest(product);
+      });
+    }
+
+    if (termField) {
+      termField.addEventListener("input", () => {
+        const product = productSelect
+          ? loanProductMap[productSelect.value] || null
+          : null;
+        applyDeductionInterest(product);
+      });
+    }
+
+    if (termUnitField) {
+      termUnitField.addEventListener("change", () => {
+        const product = productSelect
+          ? loanProductMap[productSelect.value] || null
+          : null;
+        applyDeductionInterest(product);
       });
     }
   };

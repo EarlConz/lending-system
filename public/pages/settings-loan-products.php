@@ -98,6 +98,8 @@
     "insurance_gl_account" => "",
     "insurance_product" => "None",
     "notarial_used" => "Not Used",
+    "notarial_rate_option" => "Percentage(%)",
+    "notarial_rate_value" => "",
     "doc_stamp_used" => "Not Used",
     "inspection_fee_used" => "Not Used",
     "filing_fee_used" => "Not Used",
@@ -105,6 +107,7 @@
     "processing_fee_name" => "",
     "processing_fee_bracket_option" => "By Amount (PHP)",
     "processing_fee_rate_option" => "Percent (%)",
+    "processing_fee_rate_value" => "",
     "processing_fee_flexible" => 0,
     "processing_fee_gl_account" => "",
     "ctr_fund_used" => "Not Used",
@@ -213,6 +216,7 @@
     "By Amount, pro-rated by term, 365 days",
   ];
   $processingFeeRateOptions = ["Percent (%)", "Amount (PHP)"];
+  $notarialRateOptions = ["Percentage(%)", "Amount (PHP)"];
 
   $productId = null;
   if ($_SERVER["REQUEST_METHOD"] !== "POST") {
@@ -317,6 +321,8 @@
         "insurance_gl_account" => trim((string) ($_POST["insurance_gl_account"] ?? "")),
         "insurance_product" => trim((string) ($_POST["insurance_product"] ?? "None")),
         "notarial_used" => $normalizeUsed($_POST["notarial_used"] ?? ""),
+        "notarial_rate_option" => trim((string) ($_POST["notarial_rate_option"] ?? "Percentage(%)")),
+        "notarial_rate_value" => trim((string) ($_POST["notarial_rate_value"] ?? "")),
         "doc_stamp_used" => $normalizeUsed($_POST["doc_stamp_used"] ?? ""),
         "inspection_fee_used" => $normalizeUsed($_POST["inspection_fee_used"] ?? ""),
         "filing_fee_used" => $normalizeUsed($_POST["filing_fee_used"] ?? ""),
@@ -324,6 +330,7 @@
         "processing_fee_name" => trim((string) ($_POST["processing_fee_name"] ?? "")),
         "processing_fee_bracket_option" => trim((string) ($_POST["processing_fee_bracket_option"] ?? "By Amount (PHP)")),
         "processing_fee_rate_option" => trim((string) ($_POST["processing_fee_rate_option"] ?? "Percent (%)")),
+        "processing_fee_rate_value" => trim((string) ($_POST["processing_fee_rate_value"] ?? "")),
         "processing_fee_flexible" => isset($_POST["processing_fee_flexible"]) ? 1 : 0,
         "processing_fee_gl_account" => trim((string) ($_POST["processing_fee_gl_account"] ?? "")),
         "ctr_fund_used" => $normalizeUsed($_POST["ctr_fund_used"] ?? ""),
@@ -410,6 +417,10 @@
         $formValues["processing_fee_rate_option"] = "Percent (%)";
       }
 
+      if (!in_array($formValues["notarial_rate_option"], $notarialRateOptions, true)) {
+        $formValues["notarial_rate_option"] = "Percentage(%)";
+      }
+
       $payload = [
         "name" => $formValues["name"],
         "code" => $normalizeText($formValues["code"]),
@@ -482,6 +493,8 @@
         "insurance_gl_account" => $normalizeText($formValues["insurance_gl_account"]),
         "insurance_product" => $formValues["insurance_product"],
         "notarial_used" => $formValues["notarial_used"],
+        "notarial_rate_option" => $formValues["notarial_rate_option"],
+        "notarial_rate_value" => $normalizeNumber($formValues["notarial_rate_value"], "Notarial rate value"),
         "doc_stamp_used" => $formValues["doc_stamp_used"],
         "inspection_fee_used" => $formValues["inspection_fee_used"],
         "filing_fee_used" => $formValues["filing_fee_used"],
@@ -489,6 +502,7 @@
         "processing_fee_name" => $normalizeText($formValues["processing_fee_name"]),
         "processing_fee_bracket_option" => $formValues["processing_fee_bracket_option"],
         "processing_fee_rate_option" => $formValues["processing_fee_rate_option"],
+        "processing_fee_rate_value" => $normalizeNumber($formValues["processing_fee_rate_value"], "Processing fee rate value"),
         "processing_fee_flexible" => $formValues["processing_fee_flexible"],
         "processing_fee_gl_account" => $normalizeText($formValues["processing_fee_gl_account"]),
         "ctr_fund_used" => $formValues["ctr_fund_used"],
@@ -1156,7 +1170,24 @@
               <option value="Not Used" <?php echo $formValues["notarial_used"] === "Not Used" ? "selected" : ""; ?>>Not Used</option>
               <option value="Used" <?php echo $formValues["notarial_used"] === "Used" ? "selected" : ""; ?>>Used</option>
             </select>
-            <div class="placeholder-panel" data-used-panel="notarial_used">Placeholder for notarial deduction.</div>
+          </div>
+          <div class="used-panel" data-used-panel="notarial_used" style="grid-column: 1 / -1;">
+            <div class="form-grid">
+              <div>
+                <label>Rate Options</label>
+                <select name="notarial_rate_option">
+                  <?php foreach ($notarialRateOptions as $option) : ?>
+                    <option value="<?php echo htmlspecialchars($option); ?>" <?php echo $formValues["notarial_rate_option"] === $option ? "selected" : ""; ?>>
+                      <?php echo htmlspecialchars($option); ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div>
+                <label>Rate Value</label>
+                <input type="text" name="notarial_rate_value" value="<?php echo htmlspecialchars((string) $formValues["notarial_rate_value"]); ?>" />
+              </div>
+            </div>
           </div>
           <div>
             <label>Doc Stamp</label>
@@ -1214,6 +1245,10 @@
                     </option>
                   <?php endforeach; ?>
                 </select>
+              </div>
+              <div>
+                <label>Rate Value</label>
+                <input type="text" name="processing_fee_rate_value" value="<?php echo htmlspecialchars((string) $formValues["processing_fee_rate_value"]); ?>" />
               </div>
               <div>
                 <label>Flexible</label>

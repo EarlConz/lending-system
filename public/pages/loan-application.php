@@ -19,6 +19,18 @@
   $productIds = array_map(static function ($product) {
     return (int) $product["id"];
   }, $loanProducts);
+  $loanProductLookup = [];
+  foreach ($loanProducts as $product) {
+    $loanProductLookup[(string) ($product["id"] ?? "")] = [
+      "term_unit" => (string) ($product["term_unit"] ?? ""),
+      "default_term" => (string) ($product["default_term"] ?? ""),
+      "interest_rate" => (string) ($product["interest_rate"] ?? ""),
+      "service_charge" => (string) ($product["service_charge"] ?? ""),
+      "notarial_used" => (string) ($product["notarial_used"] ?? "Not Used"),
+      "notarial_rate_option" => (string) ($product["notarial_rate_option"] ?? "Percentage(%)"),
+      "notarial_rate_value" => (string) ($product["notarial_rate_value"] ?? ""),
+    ];
+  }
 
   $formValues = [
     "borrower_id" => "",
@@ -642,6 +654,9 @@
       </div>
       <div class="tw-px-6 tw-pb-6">
         <div class="tw-max-h-[75vh] tw-overflow-y-auto tw-pt-4">
+          <script type="application/json" id="loanProductData">
+            <?php echo json_encode($loanProductLookup, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>
+          </script>
           <form id="loan-application-form" method="post" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrf_token()); ?>" />
             <input type="hidden" name="action" value="create_application" />
@@ -667,7 +682,7 @@
                 <div class="tw-mt-5 tw-grid tw-gap-4 tw-md:grid-cols-2">
                   <div>
                     <label>Loan Product</label>
-                    <select name="product_id">
+                    <select name="product_id" data-loan-product-select>
                       <option value="">Select loan product</option>
                       <?php foreach ($loanProducts as $product) : ?>
                         <option value="<?php echo (int) $product["id"]; ?>" <?php echo $formValues["product_id"] === (string) $product["id"] ? "selected" : ""; ?>>
@@ -694,13 +709,13 @@
                   </div>
                   <div>
                     <label>Loan Amount</label>
-                    <input type="text" name="requested_amount" placeholder="150,000" value="<?php echo htmlspecialchars($formValues["requested_amount"]); ?>" />
+                    <input type="text" name="requested_amount" placeholder="150,000" value="<?php echo htmlspecialchars($formValues["requested_amount"]); ?>" data-loan-amount-field />
                   </div>
                   <div>
                     <label>Term / Term Unit</label>
                     <div class="tw-grid tw-gap-2 tw-grid-cols-[1fr_1.2fr]">
-                      <input type="text" name="terms_months" placeholder="144" value="<?php echo htmlspecialchars($formValues["terms_months"]); ?>" />
-                      <select name="term_unit">
+                      <input type="text" name="terms_months" placeholder="144" value="<?php echo htmlspecialchars($formValues["terms_months"]); ?>" data-loan-term-field />
+                      <select name="term_unit" data-loan-term-unit-field>
                         <option value="">Select</option>
                         <?php foreach ($allowedTermUnits as $unit) : ?>
                           <option value="<?php echo htmlspecialchars($unit); ?>" <?php echo $formValues["term_unit"] === $unit ? "selected" : ""; ?>>
@@ -717,7 +732,7 @@
                   <div>
                     <label>Interest Rate</label>
                     <div class="tw-grid tw-gap-2 tw-grid-cols-[1fr_1.2fr]">
-                      <input type="text" name="interest_rate" placeholder="6.0000" value="<?php echo htmlspecialchars($formValues["interest_rate"]); ?>" />
+                      <input type="text" name="interest_rate" placeholder="6.0000" value="<?php echo htmlspecialchars($formValues["interest_rate"]); ?>" data-loan-interest-field />
                       <select name="interest_type">
                         <option value="">Select</option>
                         <?php foreach ($allowedInterestTypes as $type) : ?>
@@ -748,11 +763,11 @@
                 <div class="tw-mt-3 tw-grid tw-gap-4 tw-md:grid-cols-2">
                   <div>
                     <label>Interest</label>
-                    <input type="text" name="deduction_interest" value="<?php echo htmlspecialchars($formValues["deduction_interest"]); ?>" />
+                    <input type="text" name="deduction_interest" value="<?php echo htmlspecialchars($formValues["deduction_interest"]); ?>" data-loan-interest-deduction-field />
                   </div>
                   <div>
                     <label>Service Charge</label>
-                    <input type="text" name="deduction_service_charge" value="<?php echo htmlspecialchars($formValues["deduction_service_charge"]); ?>" />
+                    <input type="text" name="deduction_service_charge" value="<?php echo htmlspecialchars($formValues["deduction_service_charge"]); ?>" data-loan-service-charge-field />
                   </div>
                   <div>
                     <label>Climbs (PHP)</label>
@@ -760,7 +775,7 @@
                   </div>
                   <div>
                     <label>Notarial Fee</label>
-                    <input type="text" name="deduction_notarial_fee" value="<?php echo htmlspecialchars($formValues["deduction_notarial_fee"]); ?>" />
+                    <input type="text" name="deduction_notarial_fee" value="<?php echo htmlspecialchars($formValues["deduction_notarial_fee"]); ?>" data-loan-notarial-field />
                   </div>
                   <div>
                     <label>Total Deductions</label>

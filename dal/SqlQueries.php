@@ -846,12 +846,36 @@ SELECT
 FROM loan_products
 SQL,
     "settings.loan_products_all" => <<<'SQL'
-SELECT id, name, code, description, interest_rate, service_charge, status
+SELECT
+  id,
+  name,
+  code,
+  description,
+  term_unit,
+  default_term,
+  interest_rate,
+  service_charge,
+  status,
+  notarial_used,
+  notarial_rate_option,
+  notarial_rate_value
 FROM loan_products
 ORDER BY created_at DESC
 SQL,
     "settings.loan_products_by_status" => <<<'SQL'
-SELECT id, name, code, description, interest_rate, service_charge, status
+SELECT
+  id,
+  name,
+  code,
+  description,
+  term_unit,
+  default_term,
+  interest_rate,
+  service_charge,
+  status,
+  notarial_used,
+  notarial_rate_option,
+  notarial_rate_value
 FROM loan_products
 WHERE status = :status
 ORDER BY created_at DESC
@@ -934,6 +958,8 @@ INSERT INTO loan_products (
     insurance_gl_account,
     insurance_product,
     notarial_used,
+    notarial_rate_option,
+    notarial_rate_value,
     doc_stamp_used,
     inspection_fee_used,
     filing_fee_used,
@@ -941,6 +967,7 @@ INSERT INTO loan_products (
     processing_fee_name,
     processing_fee_bracket_option,
     processing_fee_rate_option,
+    processing_fee_rate_value,
     processing_fee_flexible,
     processing_fee_gl_account,
     ctr_fund_used,
@@ -1056,6 +1083,8 @@ INSERT INTO loan_products (
     :insurance_gl_account,
     :insurance_product,
     :notarial_used,
+    :notarial_rate_option,
+    :notarial_rate_value,
     :doc_stamp_used,
     :inspection_fee_used,
     :filing_fee_used,
@@ -1063,6 +1092,7 @@ INSERT INTO loan_products (
     :processing_fee_name,
     :processing_fee_bracket_option,
     :processing_fee_rate_option,
+    :processing_fee_rate_value,
     :processing_fee_flexible,
     :processing_fee_gl_account,
     :ctr_fund_used,
@@ -1181,6 +1211,8 @@ UPDATE loan_products SET
     insurance_gl_account = :insurance_gl_account,
     insurance_product = :insurance_product,
     notarial_used = :notarial_used,
+    notarial_rate_option = :notarial_rate_option,
+    notarial_rate_value = :notarial_rate_value,
     doc_stamp_used = :doc_stamp_used,
     inspection_fee_used = :inspection_fee_used,
     filing_fee_used = :filing_fee_used,
@@ -1188,6 +1220,7 @@ UPDATE loan_products SET
     processing_fee_name = :processing_fee_name,
     processing_fee_bracket_option = :processing_fee_bracket_option,
     processing_fee_rate_option = :processing_fee_rate_option,
+    processing_fee_rate_value = :processing_fee_rate_value,
     processing_fee_flexible = :processing_fee_flexible,
     processing_fee_gl_account = :processing_fee_gl_account,
     ctr_fund_used = :ctr_fund_used,

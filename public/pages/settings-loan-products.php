@@ -89,11 +89,23 @@
     "savings_discounted_used" => "Not Used",
     "grt_used" => "Not Used",
     "insurance_used" => "Not Used",
+    "insurance_name" => "",
+    "insurance_flexible" => 0,
+    "insurance_provider_default" => "ICISP",
+    "insurance_table" => "Not Used",
+    "insurance_printing_form" => "Yes",
+    "insurance_gl_account" => "",
+    "insurance_product" => "None",
     "notarial_used" => "Not Used",
     "doc_stamp_used" => "Not Used",
     "inspection_fee_used" => "Not Used",
     "filing_fee_used" => "Not Used",
     "processing_fee_used" => "Not Used",
+    "processing_fee_name" => "",
+    "processing_fee_bracket_option" => "By Amount (PHP)",
+    "processing_fee_rate_option" => "Percent (%)",
+    "processing_fee_flexible" => 0,
+    "processing_fee_gl_account" => "",
     "ctr_fund_used" => "Not Used",
     "insurance2_used" => "Not Used",
     "deduction8_used" => "Not Used",
@@ -169,6 +181,37 @@
   $normalizeUsed = function ($value): string {
     return $value === "Used" ? "Used" : "Not Used";
   };
+
+  $grtOptions = [
+    "Not Used",
+    "% of Total Interest and S.C.",
+    "% of Total Interest Only",
+    "% of Interest Discounted Only",
+    "% of Interest Amortized Only",
+    "% of Total S.C. Only",
+    "% of Discounted S.C. Only",
+    "% of Amortized S.C. Only",
+    "% of Amortized Interest & S.C. Only",
+    "% of Amortized Interest & Discounted S.C. Only",
+  ];
+  $insuranceProviderOptions = [
+    "CBLI-MRI",
+    "CBLI-KALINGA",
+    "CBLI-NONLIFE",
+    "CLIMBS-MRI",
+    "ICISP",
+    "INSURANCE",
+  ];
+  $insuranceTableOptions = ["Not Used", "Used"];
+  $insurancePrintingOptions = ["Yes", "No"];
+  $insuranceProductOptions = ["None"];
+  $processingFeeBracketOptions = [
+    "By Term (Days)",
+    "By Amount (PHP)",
+    "By Amount, pro-rated by term, 360 days",
+    "By Amount, pro-rated by term, 365 days",
+  ];
+  $processingFeeRateOptions = ["Percent (%)", "Amount (PHP)"];
 
   $productId = null;
   if ($_SERVER["REQUEST_METHOD"] !== "POST") {
@@ -263,13 +306,25 @@
         "unsecured_approver_count" => trim((string) ($_POST["unsecured_approver_count"] ?? "1")),
         "service_charge_used" => $normalizeUsed($_POST["service_charge_used"] ?? ""),
         "savings_discounted_used" => $normalizeUsed($_POST["savings_discounted_used"] ?? ""),
-        "grt_used" => $normalizeUsed($_POST["grt_used"] ?? ""),
+        "grt_used" => trim((string) ($_POST["grt_used"] ?? "Not Used")),
         "insurance_used" => $normalizeUsed($_POST["insurance_used"] ?? ""),
+        "insurance_name" => trim((string) ($_POST["insurance_name"] ?? "")),
+        "insurance_flexible" => isset($_POST["insurance_flexible"]) ? 1 : 0,
+        "insurance_provider_default" => trim((string) ($_POST["insurance_provider_default"] ?? "")),
+        "insurance_table" => trim((string) ($_POST["insurance_table"] ?? "Not Used")),
+        "insurance_printing_form" => trim((string) ($_POST["insurance_printing_form"] ?? "Yes")),
+        "insurance_gl_account" => trim((string) ($_POST["insurance_gl_account"] ?? "")),
+        "insurance_product" => trim((string) ($_POST["insurance_product"] ?? "None")),
         "notarial_used" => $normalizeUsed($_POST["notarial_used"] ?? ""),
         "doc_stamp_used" => $normalizeUsed($_POST["doc_stamp_used"] ?? ""),
         "inspection_fee_used" => $normalizeUsed($_POST["inspection_fee_used"] ?? ""),
         "filing_fee_used" => $normalizeUsed($_POST["filing_fee_used"] ?? ""),
         "processing_fee_used" => $normalizeUsed($_POST["processing_fee_used"] ?? ""),
+        "processing_fee_name" => trim((string) ($_POST["processing_fee_name"] ?? "")),
+        "processing_fee_bracket_option" => trim((string) ($_POST["processing_fee_bracket_option"] ?? "By Amount (PHP)")),
+        "processing_fee_rate_option" => trim((string) ($_POST["processing_fee_rate_option"] ?? "Percent (%)")),
+        "processing_fee_flexible" => isset($_POST["processing_fee_flexible"]) ? 1 : 0,
+        "processing_fee_gl_account" => trim((string) ($_POST["processing_fee_gl_account"] ?? "")),
         "ctr_fund_used" => $normalizeUsed($_POST["ctr_fund_used"] ?? ""),
         "insurance2_used" => $normalizeUsed($_POST["insurance2_used"] ?? ""),
         "deduction8_used" => $normalizeUsed($_POST["deduction8_used"] ?? ""),
@@ -324,6 +379,34 @@
       $allowedDays = ["360", "365"];
       if (!in_array($formValues["days_in_year"], $allowedDays, true)) {
         $formValues["days_in_year"] = "360";
+      }
+
+      if (!in_array($formValues["grt_used"], $grtOptions, true)) {
+        $formValues["grt_used"] = "Not Used";
+      }
+
+      if (!in_array($formValues["insurance_provider_default"], $insuranceProviderOptions, true)) {
+        $formValues["insurance_provider_default"] = "ICISP";
+      }
+
+      if (!in_array($formValues["insurance_table"], $insuranceTableOptions, true)) {
+        $formValues["insurance_table"] = "Not Used";
+      }
+
+      if (!in_array($formValues["insurance_printing_form"], $insurancePrintingOptions, true)) {
+        $formValues["insurance_printing_form"] = "Yes";
+      }
+
+      if (!in_array($formValues["insurance_product"], $insuranceProductOptions, true)) {
+        $formValues["insurance_product"] = "None";
+      }
+
+      if (!in_array($formValues["processing_fee_bracket_option"], $processingFeeBracketOptions, true)) {
+        $formValues["processing_fee_bracket_option"] = "By Amount (PHP)";
+      }
+
+      if (!in_array($formValues["processing_fee_rate_option"], $processingFeeRateOptions, true)) {
+        $formValues["processing_fee_rate_option"] = "Percent (%)";
       }
 
       $payload = [
@@ -390,11 +473,23 @@
         "savings_discounted_used" => $formValues["savings_discounted_used"],
         "grt_used" => $formValues["grt_used"],
         "insurance_used" => $formValues["insurance_used"],
+        "insurance_name" => $normalizeText($formValues["insurance_name"]),
+        "insurance_flexible" => $formValues["insurance_flexible"],
+        "insurance_provider_default" => $formValues["insurance_provider_default"],
+        "insurance_table" => $formValues["insurance_table"],
+        "insurance_printing_form" => $formValues["insurance_printing_form"],
+        "insurance_gl_account" => $normalizeText($formValues["insurance_gl_account"]),
+        "insurance_product" => $formValues["insurance_product"],
         "notarial_used" => $formValues["notarial_used"],
         "doc_stamp_used" => $formValues["doc_stamp_used"],
         "inspection_fee_used" => $formValues["inspection_fee_used"],
         "filing_fee_used" => $formValues["filing_fee_used"],
         "processing_fee_used" => $formValues["processing_fee_used"],
+        "processing_fee_name" => $normalizeText($formValues["processing_fee_name"]),
+        "processing_fee_bracket_option" => $formValues["processing_fee_bracket_option"],
+        "processing_fee_rate_option" => $formValues["processing_fee_rate_option"],
+        "processing_fee_flexible" => $formValues["processing_fee_flexible"],
+        "processing_fee_gl_account" => $normalizeText($formValues["processing_fee_gl_account"]),
         "ctr_fund_used" => $formValues["ctr_fund_used"],
         "insurance2_used" => $formValues["insurance2_used"],
         "deduction8_used" => $formValues["deduction8_used"],
@@ -965,7 +1060,6 @@
               <option value="Not Used" <?php echo $formValues["service_charge_used"] === "Not Used" ? "selected" : ""; ?>>Not Used</option>
               <option value="Used" <?php echo $formValues["service_charge_used"] === "Used" ? "selected" : ""; ?>>Used</option>
             </select>
-            <div class="placeholder-panel" data-used-panel="service_charge_used">Placeholder for service charge settings.</div>
           </div>
           <div>
             <label>Savings Discounted</label>
@@ -973,15 +1067,16 @@
               <option value="Not Used" <?php echo $formValues["savings_discounted_used"] === "Not Used" ? "selected" : ""; ?>>Not Used</option>
               <option value="Used" <?php echo $formValues["savings_discounted_used"] === "Used" ? "selected" : ""; ?>>Used</option>
             </select>
-            <div class="placeholder-panel" data-used-panel="savings_discounted_used">Placeholder for savings discounted settings.</div>
           </div>
           <div>
             <label>GRT</label>
             <select name="grt_used" data-used-toggle="grt_used">
-              <option value="Not Used" <?php echo $formValues["grt_used"] === "Not Used" ? "selected" : ""; ?>>Not Used</option>
-              <option value="Used" <?php echo $formValues["grt_used"] === "Used" ? "selected" : ""; ?>>Used</option>
+              <?php foreach ($grtOptions as $option) : ?>
+                <option value="<?php echo htmlspecialchars($option); ?>" <?php echo $formValues["grt_used"] === $option ? "selected" : ""; ?>>
+                  <?php echo htmlspecialchars($option); ?>
+                </option>
+              <?php endforeach; ?>
             </select>
-            <div class="placeholder-panel" data-used-panel="grt_used">Placeholder for GRT settings.</div>
           </div>
           <div>
             <label>Insurance</label>
@@ -989,7 +1084,62 @@
               <option value="Not Used" <?php echo $formValues["insurance_used"] === "Not Used" ? "selected" : ""; ?>>Not Used</option>
               <option value="Used" <?php echo $formValues["insurance_used"] === "Used" ? "selected" : ""; ?>>Used</option>
             </select>
-            <div class="placeholder-panel" data-used-panel="insurance_used">Placeholder for insurance settings.</div>
+          </div>
+          <div class="used-panel" data-used-panel="insurance_used" style="grid-column: 1 / -1;">
+            <div class="form-grid">
+              <div>
+                <label>Insurance Name</label>
+                <input type="text" name="insurance_name" value="<?php echo htmlspecialchars((string) $formValues["insurance_name"]); ?>" />
+              </div>
+              <div>
+                <label>Flexible</label>
+                <input type="checkbox" name="insurance_flexible" <?php echo $formValues["insurance_flexible"] ? "checked" : ""; ?> />
+              </div>
+              <div>
+                <label>Insurance Provider Default</label>
+                <select name="insurance_provider_default">
+                  <?php foreach ($insuranceProviderOptions as $option) : ?>
+                    <option value="<?php echo htmlspecialchars($option); ?>" <?php echo $formValues["insurance_provider_default"] === $option ? "selected" : ""; ?>>
+                      <?php echo htmlspecialchars($option); ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div>
+                <label>Insurance Table</label>
+                <select name="insurance_table">
+                  <?php foreach ($insuranceTableOptions as $option) : ?>
+                    <option value="<?php echo htmlspecialchars($option); ?>" <?php echo $formValues["insurance_table"] === $option ? "selected" : ""; ?>>
+                      <?php echo htmlspecialchars($option); ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div>
+                <label>Enable Printing of Form</label>
+                <select name="insurance_printing_form">
+                  <?php foreach ($insurancePrintingOptions as $option) : ?>
+                    <option value="<?php echo htmlspecialchars($option); ?>" <?php echo $formValues["insurance_printing_form"] === $option ? "selected" : ""; ?>>
+                      <?php echo htmlspecialchars($option); ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div>
+                <label>Insurance GL Account</label>
+                <input type="text" name="insurance_gl_account" value="<?php echo htmlspecialchars((string) $formValues["insurance_gl_account"]); ?>" />
+              </div>
+              <div>
+                <label>Insurance Product</label>
+                <select name="insurance_product">
+                  <?php foreach ($insuranceProductOptions as $option) : ?>
+                    <option value="<?php echo htmlspecialchars($option); ?>" <?php echo $formValues["insurance_product"] === $option ? "selected" : ""; ?>>
+                      <?php echo htmlspecialchars($option); ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1037,7 +1187,46 @@
               <option value="Not Used" <?php echo $formValues["processing_fee_used"] === "Not Used" ? "selected" : ""; ?>>Not Used</option>
               <option value="Used" <?php echo $formValues["processing_fee_used"] === "Used" ? "selected" : ""; ?>>Used</option>
             </select>
-            <div class="placeholder-panel" data-used-panel="processing_fee_used">Placeholder for processing fee.</div>
+          </div>
+          <div class="used-panel" data-used-panel="processing_fee_used" style="grid-column: 1 / -1;">
+            <div class="form-grid">
+              <div>
+                <label>Name</label>
+                <input type="text" name="processing_fee_name" value="<?php echo htmlspecialchars((string) $formValues["processing_fee_name"]); ?>" />
+              </div>
+              <div>
+                <label>Bracket Option</label>
+                <select name="processing_fee_bracket_option">
+                  <?php foreach ($processingFeeBracketOptions as $option) : ?>
+                    <option value="<?php echo htmlspecialchars($option); ?>" <?php echo $formValues["processing_fee_bracket_option"] === $option ? "selected" : ""; ?>>
+                      <?php echo htmlspecialchars($option); ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div>
+                <label>Rate Options</label>
+                <select name="processing_fee_rate_option">
+                  <?php foreach ($processingFeeRateOptions as $option) : ?>
+                    <option value="<?php echo htmlspecialchars($option); ?>" <?php echo $formValues["processing_fee_rate_option"] === $option ? "selected" : ""; ?>>
+                      <?php echo htmlspecialchars($option); ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div>
+                <label>Flexible</label>
+                <input type="checkbox" name="processing_fee_flexible" <?php echo $formValues["processing_fee_flexible"] ? "checked" : ""; ?> />
+              </div>
+              <div>
+                <label>Rates Table</label>
+                <div class="form-note-text">Rates Table</div>
+              </div>
+              <div>
+                <label>Processing Fee GL Account</label>
+                <input type="text" name="processing_fee_gl_account" value="<?php echo htmlspecialchars((string) $formValues["processing_fee_gl_account"]); ?>" />
+              </div>
+            </div>
           </div>
           <div>
             <label>CTR Fund</label>

@@ -17,16 +17,33 @@
     if ($username !== "") {
       $existing = $userRepo->findByUsername($username);
       $user = $existing ?: $userRepo->createUser($username, "Staff");
+
+      if (!empty($user)) {
+        $hasPassword = !empty($user["password_hash"]);
+        if ($password !== "") {
+          if ($hasPassword) {
+            if (!password_verify($password, (string) $user["password_hash"])) {
+              $loginError = "Invalid password.";
+            }
+          } else {
+            $hash = password_hash($password, PASSWORD_DEFAULT);
+            $userRepo->updatePasswordHash((int) $user["id"], $hash);
+            $user["password_hash"] = $hash;
+          }
+        }
+      }
     }
 
-    login_user([
-      "user_id" => $user["id"] ?? null,
-      "name" => $user["username"] ?? ($username !== "" ? $username : "Guest"),
-      "role" => $user["role"] ?? "Staff",
-    ]);
+    if ($loginError === "") {
+      login_user([
+        "user_id" => $user["id"] ?? null,
+        "name" => $user["username"] ?? ($username !== "" ? $username : "Guest"),
+        "role" => $user["role"] ?? "Staff",
+      ]);
 
-    header("Location: client-new.php");
-    exit;
+      header("Location: client-new.php");
+      exit;
+    }
   }
 ?>
 <?php require "../partials/head.php"; ?>

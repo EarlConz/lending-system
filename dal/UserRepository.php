@@ -20,6 +20,16 @@ class UserRepository extends BaseRepository
     );
   }
 
+  public function findById(int $id): ?array
+  {
+    return $this->fetchOne(
+      SqlQueries::get("user.by_id"),
+      [
+        ":id" => $id,
+      ]
+    );
+  }
+
   public function createUser(string $username, string $role = "Staff"): array
   {
     $this->execute(
@@ -44,6 +54,17 @@ class UserRepository extends BaseRepository
       SqlQueries::get("user.update_role"),
       [
         ":role" => $role,
+        ":id" => $userId,
+      ]
+    );
+  }
+
+  public function updatePasswordHash(int $userId, string $hash): bool
+  {
+    return $this->execute(
+      SqlQueries::get("user.update_password_hash"),
+      [
+        ":password_hash" => $hash,
         ":id" => $userId,
       ]
     );

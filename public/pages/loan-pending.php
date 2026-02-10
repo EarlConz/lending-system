@@ -7,6 +7,55 @@
   $activePage = "loan-pending";
 
   $loanRepo = new LoanRepository();
+  $errors = [];
+  $success = isset($_GET["approved"]);
+
+  if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    require_csrf();
+    $action = $_POST["action"] ?? "";
+
+    if ($action === "approve_application") {
+      $applicationId = isset($_POST["application_id"]) && ctype_digit($_POST["application_id"])
+        ? (int) $_POST["application_id"]
+        : null;
+
+      if ($applicationId === null) {
+        $errors[] = "Invalid application selected.";
+      } else {
+        $application = $loanRepo->getLoanApplicationById($applicationId);
+        if ($application === null) {
+          $errors[] = "Application not found.";
+        } elseif (($application["status"] ?? "") !== "Pending") {
+          $errors[] = "Application is no longer pending.";
+        } elseif (empty($application["client_id"]) || empty($application["product_id"])) {
+          $errors[] = "Application is missing client or product details.";
+        } elseif (empty($application["requested_amount"]) || empty($application["terms_months"])) {
+          $errors[] = "Application is missing loan amount or term.";
+        }
+      }
+
+      if (empty($errors) && $application !== null) {
+        $loanRepo->createLoan([
+          "loan_id" => $loanRepo->generateLoanId(),
+          "client_id" => (int) $application["client_id"],
+          "product_id" => (int) $application["product_id"],
+          "amount" => $application["requested_amount"],
+          "balance" => $application["requested_amount"],
+          "term_months" => (int) $application["terms_months"],
+          "approval_date" => date("Y-m-d"),
+          "status" => "Active",
+        ]);
+
+        $loanRepo->updateLoanApplication($applicationId, [
+          "status" => "Approved",
+        ]);
+
+        header("Location: loan-pending.php?approved=1");
+        exit;
+      }
+    }
+  }
+
   $pendingStats = $loanRepo->getPendingStats();
   $pendingApplications = $loanRepo->getPendingApplications();
 
@@ -44,6 +93,24 @@
       <h3>Pending Queue</h3>
       <button class="btn ghost">Assign</button>
     </div>
+
+    <?php if ($success) : ?>
+      <div class="form-error" style="background: #e9f9ef; border-color: #bde7cb; color: #1d5b3a;">
+        Application approved successfully.
+      </div>
+    <?php endif; ?>
+
+    <?php if (!empty($errors)) : ?>
+      <div class="form-error">
+        <strong>Please review the errors below:</strong>
+        <ul>
+          <?php foreach ($errors as $error) : ?>
+            <li><?php echo htmlspecialchars($error); ?></li>
+          <?php endforeach; ?>
+        </ul>
+      </div>
+    <?php endif; ?>
+
     <div class="table-wrap">
       <table class="data-table">
         <thead>
@@ -53,12 +120,13 @@
             <th>Requested</th>
             <th>Submitted</th>
             <th>Priority</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
           <?php if (empty($pendingApplications)) : ?>
             <tr>
-              <td colspan="5" class="empty-row">No pending applications found.</td>
+              <td colspan="6" class="empty-row">No pending applications found.</td>
             </tr>
           <?php else : ?>
             <?php foreach ($pendingApplications as $application) : ?>
@@ -71,6 +139,14 @@
                   <span class="status-pill <?php echo htmlspecialchars((string) $application["priority_class"]); ?>">
                     <?php echo htmlspecialchars((string) $application["priority_label"]); ?>
                   </span>
+                </td>
+                <td>
+                  <form method="post" style="margin: 0;">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrf_token()); ?>" />
+                    <input type="hidden" name="action" value="approve_application" />
+                    <input type="hidden" name="application_id" value="<?php echo (int) $application["id"]; ?>" />
+                    <button class="btn small" type="submit">Approve</button>
+                  </form>
                 </td>
               </tr>
             <?php endforeach; ?>

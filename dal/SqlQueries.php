@@ -227,6 +227,7 @@ FROM loan_applications
 SQL,
     "loan.pending_list" => <<<'SQL'
 SELECT
+  a.id,
   a.application_id,
   a.requested_amount,
   a.submitted_date,
@@ -237,6 +238,19 @@ FROM loan_applications a
 LEFT JOIN clients c ON c.id = a.client_id
 WHERE a.status = 'Pending'
 ORDER BY a.submitted_date DESC
+SQL,
+    "loan.application_by_id" => <<<'SQL'
+SELECT
+  id,
+  application_id,
+  client_id,
+  product_id,
+  requested_amount,
+  terms_months,
+  status
+FROM loan_applications
+WHERE id = :id
+LIMIT 1
 SQL,
     "loan.release_stats" => <<<'SQL'
 SELECT
@@ -259,6 +273,26 @@ FROM loans l
 LEFT JOIN loan_releases r ON r.loan_id = l.id
 LEFT JOIN clients c ON c.id = l.client_id
 WHERE l.status IN ('Active', 'Delinquent')
+ORDER BY l.approval_date DESC
+SQL,
+    "loan.release_candidates" => <<<'SQL'
+SELECT
+  l.id AS loan_pk,
+  l.loan_id,
+  l.amount,
+  l.balance,
+  l.term_months,
+  l.approval_date,
+  p.name AS product_name,
+  p.interest_rate,
+  c.first_name,
+  c.last_name,
+  r.id AS release_pk
+FROM loans l
+JOIN clients c ON c.id = l.client_id
+JOIN loan_products p ON p.id = l.product_id
+LEFT JOIN loan_releases r ON r.loan_id = l.id
+WHERE r.id IS NULL
 ORDER BY l.approval_date DESC
 SQL,
 
@@ -449,6 +483,26 @@ SQL,
 SELECT MAX(CAST(SUBSTRING(loan_id, 4) AS UNSIGNED)) AS max_id
 FROM loans
 WHERE loan_id LIKE 'LN-%'
+SQL,
+    "loan.release_max_id" => <<<'SQL'
+SELECT MAX(CAST(SUBSTRING(release_id, 4) AS UNSIGNED)) AS max_id
+FROM loan_releases
+WHERE release_id LIKE 'RL-%'
+SQL,
+    "loan.release_insert" => <<<'SQL'
+INSERT INTO loan_releases (
+  release_id,
+  loan_id,
+  amount,
+  release_date,
+  status
+) VALUES (
+  :release_id,
+  :loan_id,
+  :amount,
+  :release_date,
+  :status
+)
 SQL,
 
     // PaymentRepository
@@ -1001,9 +1055,11 @@ SQL,
 
     // UserRepository
     "user.all" => "SELECT id, username, role, created_at FROM users ORDER BY created_at DESC",
-    "user.by_username" => "SELECT id, username, role FROM users WHERE username = :username LIMIT 1",
+    "user.by_username" => "SELECT id, username, role, password_hash FROM users WHERE username = :username LIMIT 1",
+    "user.by_id" => "SELECT id, username, role, password_hash FROM users WHERE id = :id LIMIT 1",
     "user.insert" => "INSERT INTO users (username, role) VALUES (:username, :role)",
     "user.update_role" => "UPDATE users SET role = :role WHERE id = :id",
+    "user.update_password_hash" => "UPDATE users SET password_hash = :password_hash WHERE id = :id",
   ];
 
   public static function get(string $key): string

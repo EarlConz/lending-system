@@ -44,6 +44,7 @@ class LoanRepository extends BaseRepository
       $priority = $row["priority"] ?? "Normal";
       $priorityClass = $priority === "High" ? "warn" : ($priority === "Normal" ? "ok" : "");
       $applications[] = [
+        "id" => (int) ($row["id"] ?? 0),
         "application_id" => $row["application_id"],
         "borrower" => trim(($row["first_name"] ?? "") . " " . ($row["last_name"] ?? "")),
         "requested_amount" => $row["requested_amount"],
@@ -54,6 +55,16 @@ class LoanRepository extends BaseRepository
     }
 
     return $applications;
+  }
+
+  public function getLoanApplicationById(int $applicationId): ?array
+  {
+    return $this->fetchOne(
+      SqlQueries::get("loan.application_by_id"),
+      [
+        ":id" => $applicationId,
+      ]
+    );
   }
 
   public function getReleaseStats(): array
@@ -92,6 +103,37 @@ class LoanRepository extends BaseRepository
     }
 
     return $releases;
+  }
+
+  public function getReleaseCandidates(): array
+  {
+    $rows = $this->fetchAll(SqlQueries::get("loan.release_candidates"));
+
+    $candidates = [];
+    foreach ($rows as $row) {
+      $lastName = trim((string) ($row["last_name"] ?? ""));
+      $firstName = trim((string) ($row["first_name"] ?? ""));
+      $clientName = $lastName !== "" && $firstName !== ""
+        ? $lastName . ", " . $firstName
+        : trim($lastName . $firstName);
+      $termMonths = $row["term_months"] ?? null;
+      $termLabel = $termMonths ? $termMonths . " months" : "";
+      $candidates[] = [
+        "loan_pk" => (int) ($row["loan_pk"] ?? 0),
+        "loan_id" => $row["loan_id"],
+        "client_name" => $clientName,
+        "product" => $row["product_name"],
+        "current_balance" => $row["balance"],
+        "approval_date" => $row["approval_date"],
+        "initial_term" => $termLabel,
+        "initial_amount" => $row["amount"],
+        "final_term" => $termLabel,
+        "final_amount" => $row["amount"],
+        "interest_rate" => $row["interest_rate"],
+      ];
+    }
+
+    return $candidates;
   }
 
   public function getReleaseDeletionStats(): array
@@ -288,5 +330,29 @@ class LoanRepository extends BaseRepository
 
     $next = ((int) ($row["max_id"] ?? 0)) + 1;
     return sprintf("LN-%06d", $next);
+  }
+
+  public function generateReleaseId(): string
+  {
+    $row = $this->fetchOne(
+      SqlQueries::get("loan.release_max_id")
+    );
+
+    $next = ((int) ($row["max_id"] ?? 0)) + 1;
+    return sprintf("RL-%06d", $next);
+  }
+
+  public function createRelease(array $data): void
+  {
+    $this->execute(
+      SqlQueries::get("loan.release_insert"),
+      [
+        ":release_id" => $data["release_id"],
+        ":loan_id" => $data["loan_id"],
+        ":amount" => $data["amount"],
+        ":release_date" => $data["release_date"],
+        ":status" => $data["status"],
+      ]
+    );
   }
 }

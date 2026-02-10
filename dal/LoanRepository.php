@@ -105,6 +105,89 @@ class LoanRepository extends BaseRepository
     return $releases;
   }
 
+  public function getApprovedUnreleasedLoans(): array
+  {
+    $rows = $this->fetchAll(
+      SqlQueries::get("loan.approved_unreleased_list")
+    );
+
+    $loans = [];
+    foreach ($rows as $row) {
+      $status = $row["status"] ?: "Active";
+      $statusClass = $status === "Active" ? "ok" : "warn";
+      $loans[] = [
+        "source" => "Loan",
+        "is_selectable" => true,
+        "loan_pk" => (int) ($row["loan_pk"] ?? 0),
+        "loan_id" => $row["loan_id"],
+        "borrower" => trim(($row["first_name"] ?? "") . " " . ($row["last_name"] ?? "")),
+        "product" => $row["product_name"],
+        "amount" => $row["amount"],
+        "balance" => $row["balance"],
+        "term" => $row["term_months"] ? $row["term_months"] . " months" : "",
+        "approval_date" => $row["approval_date"],
+        "status_label" => $status,
+        "status_class" => $statusClass,
+      ];
+    }
+
+    return $loans;
+  }
+
+  public function getApprovedApplications(): array
+  {
+    $rows = $this->fetchAll(
+      SqlQueries::get("loan.approved_applications_list")
+    );
+
+    $applications = [];
+    foreach ($rows as $row) {
+      $applications[] = [
+        "source" => "Application",
+        "is_selectable" => false,
+        "application_pk" => (int) ($row["application_pk"] ?? 0),
+        "application_id" => $row["application_id"],
+        "borrower" => trim(($row["first_name"] ?? "") . " " . ($row["last_name"] ?? "")),
+        "product" => $row["product_name"],
+        "amount" => $row["requested_amount"],
+        "term" => $row["terms_months"] ? $row["terms_months"] . " months" : "",
+        "approval_date" => $row["submitted_date"],
+        "status_label" => "Approved",
+        "status_class" => "ok",
+      ];
+    }
+
+    return $applications;
+  }
+
+  public function getReleasedApplications(): array
+  {
+    $rows = $this->fetchAll(
+      SqlQueries::get("loan.released_list")
+    );
+
+    $releases = [];
+    foreach ($rows as $row) {
+      $status = $row["status"] ?: "Ready";
+      $statusClass = $status === "Released" ? "ok" : "warn";
+      $releases[] = [
+        "release_pk" => (int) ($row["release_pk"] ?? 0),
+        "release_id" => $row["release_id"],
+        "loan_pk" => (int) ($row["loan_pk"] ?? 0),
+        "loan_id" => $row["loan_id"],
+        "borrower" => trim(($row["first_name"] ?? "") . " " . ($row["last_name"] ?? "")),
+        "amount" => $row["amount"],
+        "term" => $row["term_months"] ? $row["term_months"] . " months" : "",
+        "approval_date" => $row["approval_date"],
+        "release_date" => $row["release_date"],
+        "status_label" => $status,
+        "status_class" => $statusClass,
+      ];
+    }
+
+    return $releases;
+  }
+
   public function getReleaseCandidates(): array
   {
     $rows = $this->fetchAll(SqlQueries::get("loan.release_candidates"));
@@ -159,6 +242,7 @@ class LoanRepository extends BaseRepository
     $deletions = [];
     foreach ($rows as $row) {
       $deletions[] = [
+        "release_pk" => (int) ($row["release_pk"] ?? 0),
         "release_id" => $row["release_id"],
         "borrower" => trim(($row["first_name"] ?? "") . " " . ($row["last_name"] ?? "")),
         "amount" => $row["amount"],
@@ -170,6 +254,36 @@ class LoanRepository extends BaseRepository
     }
 
     return $deletions;
+  }
+
+  public function getLoanApplicationViewById(int $applicationId): ?array
+  {
+    return $this->fetchOne(
+      SqlQueries::get("loan.application_view_by_id"),
+      [
+        ":id" => $applicationId,
+      ]
+    );
+  }
+
+  public function getLoanById(int $loanId): ?array
+  {
+    return $this->fetchOne(
+      SqlQueries::get("loan.by_id"),
+      [
+        ":id" => $loanId,
+      ]
+    );
+  }
+
+  public function getReleaseById(int $releaseId): ?array
+  {
+    return $this->fetchOne(
+      SqlQueries::get("loan.release_by_id"),
+      [
+        ":id" => $releaseId,
+      ]
+    );
   }
 
   public function createLoanApplication(array $data): int

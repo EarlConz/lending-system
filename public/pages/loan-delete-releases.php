@@ -54,12 +54,13 @@
             <th>Released</th>
             <th>Reason</th>
             <th>Status</th>
+            <th>View</th>
           </tr>
         </thead>
         <tbody>
           <?php if (empty($releaseDeletions)) : ?>
             <tr>
-              <td colspan="6" class="empty-row">No release deletions queued.</td>
+              <td colspan="7" class="empty-row">No release deletions queued.</td>
             </tr>
           <?php else : ?>
             <?php foreach ($releaseDeletions as $release) : ?>
@@ -73,6 +74,9 @@
                   <span class="status-pill <?php echo htmlspecialchars((string) $release["status_class"]); ?>">
                     <?php echo htmlspecialchars((string) $release["status_label"]); ?>
                   </span>
+                </td>
+                <td>
+                  <a class="btn small ghost" href="loan-release-view.php?id=<?php echo (int) $release["release_pk"]; ?>">View</a>
                 </td>
               </tr>
             <?php endforeach; ?>

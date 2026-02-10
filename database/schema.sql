@@ -319,7 +319,7 @@ CREATE TABLE loan_releases (
   loan_id INT UNSIGNED NOT NULL,
   amount DECIMAL(12,2) NOT NULL,
   release_date DATE NOT NULL,
-  status ENUM('Ready', 'Scheduled', 'Hold') NOT NULL DEFAULT 'Ready',
+  status ENUM('Ready', 'Scheduled', 'Hold', 'Released') NOT NULL DEFAULT 'Ready',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   CONSTRAINT fk_releases_loan

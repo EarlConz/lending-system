@@ -275,6 +275,115 @@ LEFT JOIN clients c ON c.id = l.client_id
 WHERE l.status IN ('Active', 'Delinquent')
 ORDER BY l.approval_date DESC
 SQL,
+    "loan.approved_unreleased_list" => <<<'SQL'
+SELECT
+  l.id AS loan_pk,
+  l.loan_id,
+  l.amount,
+  l.balance,
+  l.term_months,
+  l.approval_date,
+  l.status,
+  c.first_name,
+  c.last_name,
+  p.name AS product_name
+FROM loans l
+JOIN clients c ON c.id = l.client_id
+JOIN loan_products p ON p.id = l.product_id
+LEFT JOIN loan_releases r ON r.loan_id = l.id
+WHERE r.id IS NULL
+  AND l.status = 'Active'
+ORDER BY l.approval_date DESC
+SQL,
+    "loan.approved_applications_list" => <<<'SQL'
+SELECT
+  a.id AS application_pk,
+  a.application_id,
+  a.requested_amount,
+  a.terms_months,
+  a.submitted_date,
+  a.status,
+  c.first_name,
+  c.last_name,
+  p.name AS product_name
+FROM loan_applications a
+JOIN clients c ON c.id = a.client_id
+JOIN loan_products p ON p.id = a.product_id
+WHERE a.status = 'Approved'
+ORDER BY a.submitted_date DESC
+SQL,
+    "loan.released_list" => <<<'SQL'
+SELECT
+  r.id AS release_pk,
+  r.release_id,
+  r.amount,
+  r.release_date,
+  r.status,
+  l.id AS loan_pk,
+  l.loan_id,
+  l.term_months,
+  l.approval_date,
+  c.first_name,
+  c.last_name
+FROM loan_releases r
+JOIN loans l ON l.id = r.loan_id
+JOIN clients c ON c.id = l.client_id
+WHERE r.status = 'Released'
+ORDER BY r.release_date DESC
+SQL,
+    "loan.application_view_by_id" => <<<'SQL'
+SELECT
+  a.id,
+  a.application_id,
+  a.requested_amount,
+  a.terms_months,
+  a.submitted_date,
+  a.status,
+  a.priority,
+  c.first_name,
+  c.last_name,
+  p.name AS product_name
+FROM loan_applications a
+LEFT JOIN clients c ON c.id = a.client_id
+LEFT JOIN loan_products p ON p.id = a.product_id
+WHERE a.id = :id
+LIMIT 1
+SQL,
+    "loan.by_id" => <<<'SQL'
+SELECT
+  l.id AS loan_pk,
+  l.loan_id,
+  l.amount,
+  l.balance,
+  l.term_months,
+  l.approval_date,
+  l.status,
+  c.first_name,
+  c.last_name,
+  p.name AS product_name
+FROM loans l
+JOIN clients c ON c.id = l.client_id
+JOIN loan_products p ON p.id = l.product_id
+WHERE l.id = :id
+LIMIT 1
+SQL,
+    "loan.release_by_id" => <<<'SQL'
+SELECT
+  r.id AS release_pk,
+  r.release_id,
+  r.amount,
+  r.release_date,
+  r.status,
+  l.id AS loan_pk,
+  l.loan_id,
+  c.first_name,
+  c.last_name
+FROM loan_releases r
+JOIN loans l ON l.id = r.loan_id
+JOIN clients c ON c.id = l.client_id
+WHERE r.id = :id
+LIMIT 1
+SQL,
     "loan.release_candidates" => <<<'SQL'
 SELECT
   l.id AS loan_pk,
@@ -341,6 +450,7 @@ FROM loan_releases
 SQL,
     "loan.release_deletions" => <<<'SQL'
 SELECT
+  r.id AS release_pk,
   r.release_id,
   r.amount,
   r.release_date,

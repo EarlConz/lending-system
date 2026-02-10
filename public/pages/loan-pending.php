@@ -141,12 +141,15 @@
                   </span>
                 </td>
                 <td>
-                  <form method="post" style="margin: 0;">
-                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrf_token()); ?>" />
-                    <input type="hidden" name="action" value="approve_application" />
-                    <input type="hidden" name="application_id" value="<?php echo (int) $application["id"]; ?>" />
-                    <button class="btn small" type="submit">Approve</button>
-                  </form>
+                  <div class="tw-flex tw-gap-2">
+                    <form method="post" style="margin: 0;">
+                      <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrf_token()); ?>" />
+                      <input type="hidden" name="action" value="approve_application" />
+                      <input type="hidden" name="application_id" value="<?php echo (int) $application["id"]; ?>" />
+                      <button class="btn small" type="submit">Approve</button>
+                    </form>
+                    <a class="btn small ghost" href="loan-application-view.php?id=<?php echo (int) $application["id"]; ?>">View</a>
+                  </div>
                 </td>
               </tr>
             <?php endforeach; ?>
